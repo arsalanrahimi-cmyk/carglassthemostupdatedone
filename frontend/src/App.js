@@ -816,7 +816,7 @@ const SellerRegister = () => {
       const res = await axios.post(`${API}/sellers/register`, formData);
       login(res.data.token, res.data.user);
       setToast({ message: "Seller account created successfully!", type: "success" });
-      setTimeout(() => navigate("/"), 2000);
+      setTimeout(() => navigate("/dashboard"), 2000);
     } catch (error) {
       console.error("Registration error:", error.response?.data);
       setToast({ 
@@ -914,7 +914,7 @@ const SellerRegister = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Website</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Website <span className="text-slate-400">(Optional)</span></label>
               <input
                 type="url"
                 name="website"
@@ -928,13 +928,13 @@ const SellerRegister = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Street Address *</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Street Address <span className="text-slate-400">(Optional)</span></label>
             <input
               type="text"
               name="address"
               value={formData.address}
               onChange={handleChange}
-              required
+              placeholder="Enter your business address"
               className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               data-testid="seller-address"
             />
@@ -982,7 +982,7 @@ const SellerRegister = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Business Description</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Business Description <span className="text-slate-400">(Optional)</span></label>
             <textarea
               name="description"
               value={formData.description}
