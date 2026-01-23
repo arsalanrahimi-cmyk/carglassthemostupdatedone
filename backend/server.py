@@ -437,6 +437,37 @@ async def submit_contact(message: ContactMessage):
 
 # ==================== PARTS ROUTES ====================
 
+class PartBulkCreate(BaseModel):
+    parts: List[PartCreate]
+
+@api_router.post("/parts/bulk", response_model=dict)
+async def create_parts_bulk(bulk: PartBulkCreate, current_user: dict = Depends(get_current_user)):
+    if current_user["user_type"] not in ["seller", "admin"]:
+        raise HTTPException(status_code=403, detail="Only sellers can create parts")
+    
+    created_count = 0
+    errors = []
+    
+    for idx, part in enumerate(bulk.parts):
+        try:
+            part_doc = {
+                "id": str(uuid.uuid4()),
+                "seller_id": current_user.get("seller_id"),
+                **part.model_dump(),
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.parts.insert_one(part_doc)
+            created_count += 1
+        except Exception as e:
+            errors.append({"row": idx + 1, "error": str(e)})
+    
+    return {
+        "success": True,
+        "created_count": created_count,
+        "total_submitted": len(bulk.parts),
+        "errors": errors
+    }
+
 @api_router.post("/parts", response_model=dict)
 async def create_part(part: PartCreate, current_user: dict = Depends(get_current_user)):
     if current_user["user_type"] not in ["seller", "admin"]:
