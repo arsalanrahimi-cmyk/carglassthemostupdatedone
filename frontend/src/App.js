@@ -2028,16 +2028,19 @@ const AddPartModal = ({ token, onClose, onSuccess, editingPart }) => {
     make: editingPart?.make || "",
     model: editingPart?.model || "",
     price: editingPart?.price || "",
+    call_for_price: editingPart?.call_for_price || false,
     quantity: editingPart?.quantity || "",
     condition: editingPart?.condition || "New",
     description: editingPart?.description || "",
-    listing_type: editingPart?.listing_type || "for_sale"
+    listing_type: editingPart?.listing_type || "for_sale",
+    images: editingPart?.images || []
   });
   const [loading, setLoading] = useState(false);
   const [makes, setMakes] = useState([]);
   const [models, setModels] = useState([]);
   const [partTypes, setPartTypes] = useState([]);
   const [years, setYears] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState(editingPart?.images || []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -2066,11 +2069,54 @@ const AddPartModal = ({ token, onClose, onSuccess, editingPart }) => {
   }, [formData.make]);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, type, checked } = e.target;
+    setFormData({ 
+      ...formData, 
+      [name]: type === "checkbox" ? checked : value 
+    });
+  };
+
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (imagePreviews.length + files.length > 3) {
+      alert("You can only upload up to 3 images");
+      return;
+    }
+
+    files.forEach(file => {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image size should be less than 5MB");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreviews(prev => [...prev, reader.result]);
+        setFormData(prev => ({
+          ...prev,
+          images: [...prev.images, reader.result]
+        }));
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index) => {
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!formData.call_for_price && !formData.price) {
+      alert("Please enter a price or select 'Call for Price'");
+      return;
+    }
+    
     setLoading(true);
     
     try {
@@ -2078,7 +2124,7 @@ const AddPartModal = ({ token, onClose, onSuccess, editingPart }) => {
         ...formData,
         year_start: parseInt(formData.year_start),
         year_end: parseInt(formData.year_end),
-        price: parseFloat(formData.price),
+        price: formData.call_for_price ? null : parseFloat(formData.price),
         quantity: parseInt(formData.quantity)
       };
 
@@ -2157,6 +2203,41 @@ const AddPartModal = ({ token, onClose, onSuccess, editingPart }) => {
                 </div>
               </label>
             </div>
+          </div>
+
+          {/* Image Upload Section */}
+          <div className="bg-slate-50 p-4 rounded-sm border border-slate-200">
+            <label className="block text-sm font-medium text-slate-700 mb-3">
+              Product Images <span className="text-slate-400">(Up to 3 images)</span>
+            </label>
+            <div className="flex gap-3 flex-wrap">
+              {imagePreviews.map((img, index) => (
+                <div key={index} className="relative w-24 h-24 rounded-sm overflow-hidden border border-slate-200">
+                  <img src={img} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(index)}
+                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              {imagePreviews.length < 3 && (
+                <label className="w-24 h-24 border-2 border-dashed border-slate-300 rounded-sm flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
+                  <span className="text-2xl text-slate-400">+</span>
+                  <span className="text-xs text-slate-500">Add Photo</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    multiple
+                  />
+                </label>
+              )}
+            </div>
+            <p className="text-xs text-slate-500 mt-2">Max 5MB per image. JPG, PNG supported.</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -2257,20 +2338,44 @@ const AddPartModal = ({ token, onClose, onSuccess, editingPart }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Price ($) *</label>
-              <input
-                type="number"
-                name="price"
-                value={formData.price}
-                onChange={handleChange}
-                required
-                min="0"
-                step="0.01"
-                className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 text-sm"
-              />
+          {/* Price Section with Call for Price option */}
+          <div className="bg-slate-50 p-4 rounded-sm border border-slate-200">
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-sm font-medium text-slate-700">Pricing *</label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="call_for_price"
+                  checked={formData.call_for_price}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-blue-600 rounded"
+                />
+                <span className="text-sm text-slate-700">Call for Price</span>
+              </label>
             </div>
+            {!formData.call_for_price ? (
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+                <input
+                  type="number"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleChange}
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  className="w-full h-10 pl-7 pr-3 bg-white border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 text-sm"
+                />
+              </div>
+            ) : (
+              <div className="h-10 px-3 bg-amber-50 border border-amber-200 rounded-sm flex items-center">
+                <Phone size={16} className="text-amber-600 mr-2" />
+                <span className="text-sm text-amber-700">Buyers will contact you for pricing</span>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Quantity *</label>
               <input
