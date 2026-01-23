@@ -382,6 +382,9 @@ async def register_installer(installer: InstallerCreate):
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
+    # Limit work images to 5
+    work_images = installer.work_images[:5] if installer.work_images else []
+    
     installer_doc = {
         "id": installer_id,
         "user_id": user_id,
@@ -397,6 +400,7 @@ async def register_installer(installer: InstallerCreate):
         "website": installer.website,
         "description": installer.description,
         "certifications": installer.certifications,
+        "work_images": work_images,
         "verified": False,
         "rating": 0,
         "review_count": 0,
