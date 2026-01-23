@@ -1503,6 +1503,178 @@ const BrowseParts = () => {
   );
 };
 
+// Star Rating Component
+const StarRating = ({ rating, size = 16, interactive = false, onChange }) => {
+  const [hoverRating, setHoverRating] = useState(0);
+  
+  return (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map(star => (
+        <button
+          key={star}
+          type={interactive ? "button" : undefined}
+          disabled={!interactive}
+          onClick={() => interactive && onChange && onChange(star)}
+          onMouseEnter={() => interactive && setHoverRating(star)}
+          onMouseLeave={() => interactive && setHoverRating(0)}
+          className={`${interactive ? "cursor-pointer" : "cursor-default"}`}
+        >
+          <svg
+            width={size}
+            height={size}
+            viewBox="0 0 24 24"
+            fill={(interactive ? hoverRating || rating : rating) >= star ? "#FBBF24" : "none"}
+            stroke={(interactive ? hoverRating || rating : rating) >= star ? "#FBBF24" : "#D1D5DB"}
+            strokeWidth="2"
+          >
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+          </svg>
+        </button>
+      ))}
+    </div>
+  );
+};
+
+// Review Modal Component
+const ReviewModal = ({ installer, onClose, onSubmit }) => {
+  const [rating, setRating] = useState(5);
+  const [reviewerName, setReviewerName] = useState("");
+  const [reviewerEmail, setReviewerEmail] = useState("");
+  const [comment, setComment] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await axios.post(`${API}/reviews`, {
+        installer_id: installer.id,
+        rating,
+        reviewer_name: reviewerName,
+        reviewer_email: reviewerEmail || null,
+        comment
+      });
+      onSubmit();
+    } catch (error) {
+      console.error("Error submitting review:", error);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-white rounded-sm max-w-lg w-full p-6" onClick={e => e.stopPropagation()}>
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <h3 className="font-heading text-xl font-bold text-slate-900">Write a Review</h3>
+            <p className="text-slate-600 text-sm mt-1">for {installer.business_name}</p>
+          </div>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+            <X size={24} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Your Rating *</label>
+            <StarRating rating={rating} size={32} interactive onChange={setRating} />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Your Name *</label>
+            <input
+              type="text"
+              value={reviewerName}
+              onChange={(e) => setReviewerName(e.target.value)}
+              required
+              className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="John Doe"
+              data-testid="review-name"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Email <span className="text-slate-400">(Optional)</span></label>
+            <input
+              type="email"
+              value={reviewerEmail}
+              onChange={(e) => setReviewerEmail(e.target.value)}
+              className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="john@example.com"
+              data-testid="review-email"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Your Review *</label>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              required
+              rows={4}
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Share your experience with this installer..."
+              data-testid="review-comment"
+            />
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 h-12 border border-slate-200 text-slate-700 rounded-sm font-medium hover:bg-slate-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 h-12 bg-blue-600 text-white rounded-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+              data-testid="review-submit-btn"
+            >
+              {loading ? "Submitting..." : "Submit Review"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Reviews List Component
+const ReviewsList = ({ installerId }) => {
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    axios.get(`${API}/reviews/${installerId}`)
+      .then(res => setReviews(res.data))
+      .catch(err => console.error(err))
+      .finally(() => setLoading(false));
+  }, [installerId]);
+
+  if (loading) return <div className="text-sm text-slate-500">Loading reviews...</div>;
+  if (reviews.length === 0) return <div className="text-sm text-slate-500">No reviews yet</div>;
+
+  return (
+    <div className="space-y-3 mt-4 pt-4 border-t border-slate-100">
+      <h4 className="text-sm font-medium text-slate-700">Recent Reviews</h4>
+      {reviews.slice(0, 3).map(review => (
+        <div key={review.id} className="bg-slate-50 p-3 rounded-sm">
+          <div className="flex items-center gap-2 mb-1">
+            <StarRating rating={review.rating} size={14} />
+            <span className="text-sm font-medium text-slate-700">{review.reviewer_name}</span>
+          </div>
+          <p className="text-sm text-slate-600">{review.comment}</p>
+          <p className="text-xs text-slate-400 mt-1">
+            {new Date(review.created_at).toLocaleDateString()}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 // Find Installers Page
 const FindInstallers = () => {
   const [installers, setInstallers] = useState([]);
