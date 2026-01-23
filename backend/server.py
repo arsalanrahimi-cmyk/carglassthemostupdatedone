@@ -343,8 +343,10 @@ async def register_installer(installer: InstallerCreate):
     }
 
 @api_router.get("/installers", response_model=List[dict])
-async def get_installers(city: Optional[str] = None, state: Optional[str] = None):
+async def get_installers(city: Optional[str] = None, state: Optional[str] = None, zip_code: Optional[str] = None):
     query = {}
+    if zip_code:
+        query["zip_code"] = {"$regex": zip_code, "$options": "i"}
     if city:
         query["city"] = {"$regex": city, "$options": "i"}
     if state:
