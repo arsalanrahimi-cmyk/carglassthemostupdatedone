@@ -1946,7 +1946,7 @@ const SellerDashboard = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white p-6 border border-slate-200 rounded-sm">
             <p className="text-sm text-slate-500">Total Listings</p>
             <p className="font-heading text-3xl font-bold text-slate-900">{parts.length}</p>
@@ -1959,6 +1959,7 @@ const SellerDashboard = () => {
             <p className="text-sm text-slate-500">Private (Inventory Only)</p>
             <p className="font-heading text-3xl font-bold text-slate-600">{privateParts.length}</p>
           </div>
+          <ShareInventoryCard token={token} />
         </div>
 
         {/* Parts List */}
