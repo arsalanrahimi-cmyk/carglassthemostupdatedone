@@ -754,6 +754,382 @@ const Login = () => {
   );
 };
 
+// Forgot Password Page
+const ForgotPassword = () => {
+  const [step, setStep] = useState(1); // 1: enter email, 2: enter code, 3: new password
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState(null);
+  const navigate = useNavigate();
+
+  const handleRequestCode = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await axios.post(`${API}/auth/forgot-password`, null, {
+        params: { email }
+      });
+      setToast({ message: "Reset code sent! Check your email.", type: "success" });
+      // For demo purposes, show the code (remove in production)
+      if (res.data.reset_code) {
+        setToast({ message: `Reset code: ${res.data.reset_code} (Demo only - check email in production)`, type: "success" });
+      }
+      setStep(2);
+    } catch (error) {
+      setToast({ 
+        message: error.response?.data?.detail || "Failed to send reset code", 
+        type: "error" 
+      });
+    }
+    setLoading(false);
+  };
+
+  const handleVerifyAndReset = async (e) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      setToast({ message: "Passwords do not match", type: "error" });
+      return;
+    }
+    if (newPassword.length < 6) {
+      setToast({ message: "Password must be at least 6 characters", type: "error" });
+      return;
+    }
+    setLoading(true);
+    try {
+      await axios.post(`${API}/auth/reset-password`, null, {
+        params: { email, code, new_password: newPassword }
+      });
+      setToast({ message: "Password reset successful! Please login.", type: "success" });
+      setTimeout(() => navigate("/login"), 2000);
+    } catch (error) {
+      setToast({ 
+        message: error.response?.data?.detail || "Invalid or expired code", 
+        type: "error" 
+      });
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="min-h-[80vh] flex items-center justify-center py-12 px-4">
+      {toast && <Toast {...toast} onClose={() => setToast(null)} />}
+      <div className="max-w-md w-full">
+        <div className="text-center mb-8">
+          <h1 className="font-heading text-3xl font-bold text-slate-900">Reset Password</h1>
+          <p className="text-slate-600 mt-2">
+            {step === 1 && "Enter your email to receive a reset code"}
+            {step === 2 && "Enter the code sent to your email and choose a new password"}
+          </p>
+        </div>
+
+        <div className="bg-white p-8 border border-slate-200 rounded-sm">
+          {/* Progress Steps */}
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step >= 1 ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'}`}>1</div>
+            <div className={`w-12 h-1 ${step >= 2 ? 'bg-blue-600' : 'bg-slate-200'}`}></div>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step >= 2 ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'}`}>2</div>
+          </div>
+
+          {step === 1 && (
+            <form onSubmit={handleRequestCode}>
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter your registered email"
+                  data-testid="forgot-email-input"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-slate-900 text-white h-12 rounded-sm font-medium hover:bg-slate-800 transition-colors disabled:opacity-50"
+                data-testid="request-code-btn"
+              >
+                {loading ? "Sending..." : "Send Reset Code"}
+              </button>
+            </form>
+          )}
+
+          {step === 2 && (
+            <form onSubmit={handleVerifyAndReset}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-slate-700 mb-1">Verification Code</label>
+                <input
+                  type="text"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  required
+                  maxLength={6}
+                  className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-2xl tracking-widest font-mono"
+                  placeholder="000000"
+                  data-testid="reset-code-input"
+                />
+                <p className="text-xs text-slate-500 mt-1">Enter the 6-digit code sent to {email}</p>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-slate-700 mb-1">New Password</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter new password"
+                  data-testid="new-password-input"
+                />
+              </div>
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-slate-700 mb-1">Confirm Password</label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Confirm new password"
+                  data-testid="confirm-password-input"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-blue-600 text-white h-12 rounded-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                data-testid="reset-password-btn"
+              >
+                {loading ? "Resetting..." : "Reset Password"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="w-full mt-3 text-slate-600 text-sm hover:text-slate-800"
+              >
+                ← Back to email
+              </button>
+            </form>
+          )}
+
+          <div className="mt-6 text-center">
+            <Link to="/login" className="text-blue-600 hover:text-blue-700 text-sm">
+              Back to Login
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Account Settings Page
+const AccountSettings = () => {
+  const { user, token, logout } = useAuth();
+  const navigate = useNavigate();
+  const [showDeactivateModal, setShowDeactivateModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/login");
+    }
+  }, [user, navigate]);
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      setToast({ message: "Passwords do not match", type: "error" });
+      return;
+    }
+    if (newPassword.length < 6) {
+      setToast({ message: "Password must be at least 6 characters", type: "error" });
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      await axios.post(`${API}/auth/change-password`, null, {
+        params: { current_password: currentPassword, new_password: newPassword },
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setToast({ message: "Password changed successfully!", type: "success" });
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error) {
+      setToast({ 
+        message: error.response?.data?.detail || "Failed to change password", 
+        type: "error" 
+      });
+    }
+    setChangingPassword(false);
+  };
+
+  const handleDeactivate = async () => {
+    setLoading(true);
+    try {
+      await axios.post(`${API}/auth/deactivate`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setToast({ message: "Account deactivated successfully", type: "success" });
+      setTimeout(() => {
+        logout();
+        navigate("/");
+      }, 1500);
+    } catch (error) {
+      setToast({ 
+        message: error.response?.data?.detail || "Failed to deactivate account", 
+        type: "error" 
+      });
+    }
+    setLoading(false);
+  };
+
+  if (!user) return null;
+
+  return (
+    <div className="py-12 px-4">
+      {toast && <Toast {...toast} onClose={() => setToast(null)} />}
+      
+      {/* Deactivate Modal */}
+      {showDeactivateModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowDeactivateModal(false)}>
+          <div className="bg-white rounded-sm max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="h-8 w-8 text-red-600" />
+              </div>
+              <h3 className="font-heading text-xl font-bold text-slate-900 mb-2">Deactivate Account?</h3>
+              <p className="text-slate-600 mb-6">
+                This action will deactivate your account. Your listings will be hidden and you won't be able to log in. This action cannot be easily undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeactivateModal(false)}
+                  className="flex-1 h-12 border border-slate-200 text-slate-700 rounded-sm font-medium hover:bg-slate-50 transition-colors"
+                  data-testid="cancel-deactivate-btn"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeactivate}
+                  disabled={loading}
+                  className="flex-1 h-12 bg-red-600 text-white rounded-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
+                  data-testid="confirm-deactivate-btn"
+                >
+                  {loading ? "Deactivating..." : "Deactivate"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-2xl mx-auto">
+        <div className="mb-8">
+          <h1 className="font-heading text-3xl font-bold text-slate-900">Account Settings</h1>
+          <p className="text-slate-600 mt-2">Manage your account preferences and security</p>
+        </div>
+
+        {/* Account Info */}
+        <div className="bg-white p-6 border border-slate-200 rounded-sm mb-6">
+          <h2 className="font-heading text-lg font-bold text-slate-900 mb-4">Account Information</h2>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center py-2 border-b border-slate-100">
+              <span className="text-slate-600">Name</span>
+              <span className="font-medium text-slate-900">{user.name}</span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-slate-100">
+              <span className="text-slate-600">Email</span>
+              <span className="font-medium text-slate-900">{user.email}</span>
+            </div>
+            <div className="flex justify-between items-center py-2">
+              <span className="text-slate-600">Account Type</span>
+              <span className="font-medium text-slate-900 capitalize">{user.user_type}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Change Password */}
+        <div className="bg-white p-6 border border-slate-200 rounded-sm mb-6">
+          <h2 className="font-heading text-lg font-bold text-slate-900 mb-4">Change Password</h2>
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Current Password</label>
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                required
+                className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                data-testid="current-password-input"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">New Password</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                minLength={6}
+                className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                data-testid="settings-new-password-input"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Confirm New Password</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={6}
+                className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                data-testid="settings-confirm-password-input"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={changingPassword}
+              className="bg-slate-900 text-white px-6 py-3 rounded-sm font-medium hover:bg-slate-800 transition-colors disabled:opacity-50"
+              data-testid="change-password-btn"
+            >
+              {changingPassword ? "Changing..." : "Change Password"}
+            </button>
+          </form>
+        </div>
+
+        {/* Danger Zone */}
+        <div className="bg-white p-6 border border-red-200 rounded-sm">
+          <h2 className="font-heading text-lg font-bold text-red-600 mb-2">Danger Zone</h2>
+          <p className="text-slate-600 text-sm mb-4">
+            Once you deactivate your account, your profile and listings will be hidden. You won't be able to log in until you contact support.
+          </p>
+          <button
+            onClick={() => setShowDeactivateModal(true)}
+            className="bg-red-600 text-white px-6 py-3 rounded-sm font-medium hover:bg-red-700 transition-colors"
+            data-testid="deactivate-account-btn"
+          >
+            Deactivate Account
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Seller Registration Page
 const SellerRegister = () => {
   const [formData, setFormData] = useState({
