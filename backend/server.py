@@ -453,7 +453,8 @@ async def get_parts(
     make: Optional[str] = None,
     limit: int = 50
 ):
-    query = {}
+    # Only show parts that are for sale (not private)
+    query = {"listing_type": {"$ne": "private"}}
     if part_type:
         query["part_type"] = {"$regex": part_type, "$options": "i"}
     if make:
@@ -461,6 +462,43 @@ async def get_parts(
     
     parts = await db.parts.find(query, {"_id": 0}).to_list(limit)
     return parts
+
+@api_router.get("/parts/my-listings", response_model=List[dict])
+async def get_my_parts(current_user: dict = Depends(get_current_user)):
+    if current_user["user_type"] != "seller":
+        raise HTTPException(status_code=403, detail="Only sellers can view their listings")
+    
+    parts = await db.parts.find(
+        {"seller_id": current_user.get("seller_id")}, 
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(1000)
+    return parts
+
+@api_router.put("/parts/{part_id}", response_model=dict)
+async def update_part(part_id: str, part: PartUpdate, current_user: dict = Depends(get_current_user)):
+    if current_user["user_type"] != "seller":
+        raise HTTPException(status_code=403, detail="Only sellers can update parts")
+    
+    existing = await db.parts.find_one({"id": part_id, "seller_id": current_user.get("seller_id")})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Part not found or not owned by you")
+    
+    update_data = {k: v for k, v in part.model_dump().items() if v is not None}
+    if update_data:
+        await db.parts.update_one({"id": part_id}, {"$set": update_data})
+    
+    return {"success": True, "message": "Part updated successfully"}
+
+@api_router.delete("/parts/{part_id}", response_model=dict)
+async def delete_part(part_id: str, current_user: dict = Depends(get_current_user)):
+    if current_user["user_type"] != "seller":
+        raise HTTPException(status_code=403, detail="Only sellers can delete parts")
+    
+    result = await db.parts.delete_one({"id": part_id, "seller_id": current_user.get("seller_id")})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Part not found or not owned by you")
+    
+    return {"success": True, "message": "Part deleted successfully"}
 
 @api_router.post("/parts/search/number", response_model=List[dict])
 async def search_by_part_number(search: PartNumberSearch):
