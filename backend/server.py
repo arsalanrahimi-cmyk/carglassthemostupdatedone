@@ -74,7 +74,7 @@ class InstallerCreate(BaseModel):
     business_name: str
     contact_name: str
     phone: str
-    address: str
+    address: Optional[str] = None
     city: str
     state: str
     zip_code: str
@@ -82,6 +82,13 @@ class InstallerCreate(BaseModel):
     website: Optional[str] = None
     description: Optional[str] = None
     certifications: Optional[str] = None
+
+class ReviewCreate(BaseModel):
+    installer_id: str
+    rating: int = Field(ge=1, le=5)
+    reviewer_name: str
+    reviewer_email: Optional[EmailStr] = None
+    comment: str
 
 class ContactMessage(BaseModel):
     name: str
