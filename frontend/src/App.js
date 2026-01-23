@@ -694,7 +694,9 @@ const Login = () => {
         const res = await axios.post(`${API}/auth/login`, { email, password });
         login(res.data.token, res.data.user);
         setToast({ message: "Login successful!", type: "success" });
-        setTimeout(() => navigate("/"), 1500);
+        // Redirect sellers to dashboard
+        const redirectPath = res.data.user.user_type === "seller" ? "/dashboard" : "/";
+        setTimeout(() => navigate(redirectPath), 1500);
       }
     } catch (error) {
       setToast({ 
