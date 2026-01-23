@@ -2311,43 +2311,40 @@ const AddPartModal = ({ token, onClose, onSuccess, editingPart }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Part Type *</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Part Type</label>
             <select
               name="part_type"
               value={formData.part_type}
               onChange={handleChange}
-              required
               className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 text-sm"
             >
-              <option value="">Select part type</option>
+              <option value="">Select part type (default: Windshield)</option>
               {partTypes.map(pt => <option key={pt} value={pt}>{pt}</option>)}
             </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Year Start *</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Year Start</label>
               <select
                 name="year_start"
                 value={formData.year_start}
                 onChange={handleChange}
-                required
                 className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 text-sm"
               >
-                <option value="">Select</option>
+                <option value="">Select (default: {new Date().getFullYear()})</option>
                 {years.map(y => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Year End *</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Year End</label>
               <select
                 name="year_end"
                 value={formData.year_end}
                 onChange={handleChange}
-                required
                 className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 text-sm"
               >
-                <option value="">Select</option>
+                <option value="">Select (default: {new Date().getFullYear()})</option>
                 {years.map(y => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>
@@ -2355,29 +2352,27 @@ const AddPartModal = ({ token, onClose, onSuccess, editingPart }) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Make *</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Make</label>
               <select
                 name="make"
                 value={formData.make}
                 onChange={handleChange}
-                required
                 className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 text-sm"
               >
-                <option value="">Select make</option>
+                <option value="">Select make (default: Universal)</option>
                 {makes.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Model *</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Model</label>
               <select
                 name="model"
                 value={formData.model}
                 onChange={handleChange}
-                required
                 disabled={!formData.make}
                 className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 text-sm"
               >
-                <option value="">{formData.make ? "Select model" : "Select make first"}</option>
+                <option value="">{formData.make ? "Select model" : "Select make first (default: All Models)"}</option>
                 {models.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
