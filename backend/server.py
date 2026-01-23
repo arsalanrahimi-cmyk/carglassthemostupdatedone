@@ -61,7 +61,7 @@ class SellerCreate(BaseModel):
     business_name: str
     contact_name: str
     phone: str
-    address: str
+    address: Optional[str] = None
     city: str
     state: str
     zip_code: str
