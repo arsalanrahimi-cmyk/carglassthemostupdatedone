@@ -2286,24 +2286,25 @@ const AddPartModal = ({ token, onClose, onSuccess, editingPart }) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Part Number *</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">NAGS Part Number</label>
               <input
                 type="text"
                 name="part_number"
                 value={formData.part_number}
                 onChange={handleChange}
-                required
-                placeholder="e.g., FW02537"
+                placeholder="e.g., FW02537 (optional)"
                 className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 text-sm"
               />
+              <p className="text-xs text-slate-500 mt-1">Will auto-generate if left empty</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">NAGS Number</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">OEM Part Number</label>
               <input
                 type="text"
                 name="nags_number"
                 value={formData.nags_number}
                 onChange={handleChange}
+                placeholder="Optional"
                 className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 text-sm"
               />
             </div>
