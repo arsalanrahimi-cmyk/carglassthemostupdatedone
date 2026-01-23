@@ -1042,6 +1042,8 @@ const InstallerRegister = () => {
     "Rear Window Replacement",
     "Window Regulator/Motor Replacement",
     "Sunroof Repair",
+    "Sunroof Replacement",
+    "Panoramic Roof Replacement",
     "Mobile Service",
     "ADAS Calibration",
     "Insurance Claims"
