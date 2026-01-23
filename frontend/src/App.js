@@ -1,5 +1,5 @@
 import { useState, useEffect, createContext, useContext } from "react";
-import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation, useParams } from "react-router-dom";
 import axios from "axios";
 import { Search, Car, MapPin, Phone, Mail, User, Shield, Truck, Menu, X, ChevronDown, Wrench, Store, CheckCircle, AlertCircle } from "lucide-react";
 import "./App.css";
