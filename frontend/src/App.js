@@ -183,7 +183,13 @@ const Navigation = () => {
             ))}
             <div className="pt-4 border-t border-slate-200 mt-4">
               {user ? (
-                <button onClick={logout} className="text-slate-600">Logout</button>
+                <div className="space-y-2">
+                  {user.user_type === "seller" && (
+                    <Link to="/dashboard" className="block py-2 text-blue-600 font-medium" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
+                  )}
+                  <Link to="/account-settings" className="block py-2 text-slate-600" onClick={() => setMobileMenuOpen(false)}>Settings</Link>
+                  <button onClick={() => { logout(); setMobileMenuOpen(false); }} className="block py-2 text-slate-600">Logout</button>
+                </div>
               ) : (
                 <>
                   <Link to="/login" className="block py-2 text-slate-600" onClick={() => setMobileMenuOpen(false)}>Login</Link>
