@@ -209,18 +209,6 @@ const Home = () => {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // Common part number prefixes and their meanings
-  const partNumberHints = [
-    { prefix: "FW", meaning: "Windshield (Front Window)", examples: ["FW02", "FW03", "FW04"] },
-    { prefix: "DW", meaning: "Door Window", examples: ["DW01", "DW02", "DW03"] },
-    { prefix: "RW", meaning: "Rear Window", examples: ["RW01", "RW02"] },
-    { prefix: "QG", meaning: "Quarter Glass", examples: ["QG01", "QG02"] },
-    { prefix: "VG", meaning: "Vent Glass", examples: ["VG01", "VG02"] },
-    { prefix: "SR", meaning: "Sunroof Glass", examples: ["SR01", "SR02"] },
-    { prefix: "DB", meaning: "Door Glass - Back", examples: ["DB01", "DB02"] },
-    { prefix: "DF", meaning: "Door Glass - Front", examples: ["DF01", "DF02"] },
-  ];
-
   // Sample NAGS numbers for suggestions
   const sampleNAGS = [
     { number: "FW02537", vehicle: "2018-2023 Toyota Camry", type: "Windshield" },
@@ -235,6 +223,9 @@ const Home = () => {
     { number: "FW04521", vehicle: "2021-2024 Tesla Model 3", type: "Windshield" },
     { number: "FW03876", vehicle: "2020-2024 Hyundai Sonata", type: "Windshield" },
     { number: "DW02234", vehicle: "2018-2023 Mazda CX-5", type: "Door Glass" },
+    { number: "FW02537GTN", vehicle: "2018-2023 Toyota Camry (Tinted)", type: "Windshield" },
+    { number: "FW02845GYN", vehicle: "2019-2024 Honda Accord (Green)", type: "Windshield" },
+    { number: "DW01456GTN", vehicle: "2018-2023 Toyota Camry (Tinted)", type: "Front Door Glass" },
   ];
 
   useEffect(() => {
