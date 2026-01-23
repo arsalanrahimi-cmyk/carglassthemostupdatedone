@@ -1387,10 +1387,12 @@ const InstallerRegister = () => {
     services: [],
     website: "",
     description: "",
-    certifications: ""
+    certifications: "",
+    work_images: []
   });
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
+  const [imagePreviews, setImagePreviews] = useState([]);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -1424,6 +1426,44 @@ const InstallerRegister = () => {
       ? formData.services.filter(s => s !== service)
       : [...formData.services, service];
     setFormData({ ...formData, services: newServices });
+  };
+
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    const maxImages = 5;
+    const currentCount = formData.work_images.length;
+    const remainingSlots = maxImages - currentCount;
+    
+    if (files.length > remainingSlots) {
+      setToast({ message: `You can only upload ${remainingSlots} more image(s). Maximum is 5.`, type: "error" });
+      return;
+    }
+
+    files.forEach(file => {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        setToast({ message: "Each image must be less than 5MB", type: "error" });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result;
+        setFormData(prev => ({
+          ...prev,
+          work_images: [...prev.work_images, base64].slice(0, maxImages)
+        }));
+        setImagePreviews(prev => [...prev, base64].slice(0, maxImages));
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      work_images: prev.work_images.filter((_, i) => i !== index)
+    }));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e) => {
