@@ -1682,6 +1682,10 @@ const FindInstallers = () => {
   const [loading, setLoading] = useState(true);
   const [searchCity, setSearchCity] = useState("");
   const [searchState, setSearchState] = useState("");
+  const [selectedInstaller, setSelectedInstaller] = useState(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [expandedInstaller, setExpandedInstaller] = useState(null);
+  const [toast, setToast] = useState(null);
 
   const fetchInstallers = async () => {
     setLoading(true);
@@ -1706,8 +1710,23 @@ const FindInstallers = () => {
     fetchInstallers();
   };
 
+  const handleReviewSubmit = () => {
+    setShowReviewModal(false);
+    setToast({ message: "Review submitted successfully! Thank you for your feedback.", type: "success" });
+    fetchInstallers(); // Refresh to get updated ratings
+  };
+
   return (
     <div className="py-12 px-4">
+      {toast && <Toast {...toast} onClose={() => setToast(null)} />}
+      {showReviewModal && selectedInstaller && (
+        <ReviewModal 
+          installer={selectedInstaller} 
+          onClose={() => setShowReviewModal(false)}
+          onSubmit={handleReviewSubmit}
+        />
+      )}
+      
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
           <div>
@@ -1766,15 +1785,30 @@ const FindInstallers = () => {
                     <Wrench className="h-6 w-6 text-blue-600" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-heading text-lg font-bold text-slate-900">{installer.business_name}</h3>
-                    <p className="text-slate-600 text-sm">{installer.address}</p>
+                    <div className="flex items-start justify-between">
+                      <h3 className="font-heading text-lg font-bold text-slate-900">{installer.business_name}</h3>
+                      {installer.rating > 0 && (
+                        <div className="flex items-center gap-1">
+                          <StarRating rating={Math.round(installer.rating)} size={14} />
+                          <span className="text-sm text-slate-600">({installer.review_count})</span>
+                        </div>
+                      )}
+                    </div>
+                    {installer.address && <p className="text-slate-600 text-sm">{installer.address}</p>}
                     <p className="text-slate-600 text-sm">{installer.city}, {installer.state} {installer.zip_code}</p>
+                    
                     <div className="flex items-center gap-4 mt-3">
                       <a href={`tel:${installer.phone}`} className="text-blue-600 text-sm flex items-center gap-1 hover:underline">
                         <Phone size={14} />
                         {installer.phone}
                       </a>
+                      {installer.website && (
+                        <a href={installer.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 text-sm hover:underline">
+                          Website
+                        </a>
+                      )}
                     </div>
+                    
                     {installer.services && installer.services.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-3">
                         {installer.services.slice(0, 3).map(service => (
@@ -1786,6 +1820,30 @@ const FindInstallers = () => {
                           <span className="text-xs text-slate-500">+{installer.services.length - 3} more</span>
                         )}
                       </div>
+                    )}
+
+                    <div className="flex gap-2 mt-4">
+                      <button
+                        onClick={() => {
+                          setSelectedInstaller(installer);
+                          setShowReviewModal(true);
+                        }}
+                        className="text-sm bg-blue-600 text-white px-4 py-2 rounded-sm hover:bg-blue-700 transition-colors"
+                        data-testid={`write-review-${installer.id}`}
+                      >
+                        Write a Review
+                      </button>
+                      <button
+                        onClick={() => setExpandedInstaller(expandedInstaller === installer.id ? null : installer.id)}
+                        className="text-sm border border-slate-200 text-slate-700 px-4 py-2 rounded-sm hover:bg-slate-50 transition-colors"
+                        data-testid={`view-reviews-${installer.id}`}
+                      >
+                        {expandedInstaller === installer.id ? "Hide Reviews" : "View Reviews"}
+                      </button>
+                    </div>
+
+                    {expandedInstaller === installer.id && (
+                      <ReviewsList installerId={installer.id} />
                     )}
                   </div>
                 </div>
