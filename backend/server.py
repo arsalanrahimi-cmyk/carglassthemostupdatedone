@@ -495,12 +495,21 @@ async def forgot_password(email: EmailStr):
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
-    # In production, this would send an email. For now, we'll return the code.
-    return {
+    # Try to send email
+    email_sent = await send_password_reset_email(email, reset_code)
+    
+    # For demo: return code if email service not configured
+    response = {
         "success": True, 
-        "message": "Reset code generated. Check your email.",
-        "reset_code": reset_code  # Remove this in production - only for demo
+        "message": "Reset code generated. Check your email." if email_sent else "Reset code generated."
     }
+    
+    # Only include reset_code in response if email wasn't sent (demo mode)
+    if not email_sent:
+        response["reset_code"] = reset_code
+        response["message"] = f"Email service not configured. Your reset code is: {reset_code}"
+    
+    return response
 
 @api_router.post("/auth/reset-password", response_model=dict)
 async def reset_password(email: EmailStr, code: str, new_password: str):
