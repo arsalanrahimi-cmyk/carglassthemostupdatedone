@@ -123,6 +123,13 @@ const Navigation = () => {
                     Dashboard
                   </Link>
                 )}
+                <Link
+                  to="/account-settings"
+                  className="text-sm font-medium text-slate-600 hover:text-blue-600"
+                  data-testid="settings-link"
+                >
+                  Settings
+                </Link>
                 <button
                   onClick={logout}
                   className="text-sm font-medium text-slate-600 hover:text-blue-600"
