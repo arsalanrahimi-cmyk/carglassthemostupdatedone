@@ -1332,124 +1332,93 @@ const Contact = () => {
   return (
     <div className="py-12 px-4">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-2xl mx-auto">
         <div className="text-center mb-12">
+          <Mail className="h-12 w-12 text-blue-600 mx-auto mb-4" />
           <h1 className="font-heading text-4xl font-bold text-slate-900">Contact Us</h1>
-          <p className="text-slate-600 mt-4 max-w-2xl mx-auto">
+          <p className="text-slate-600 mt-4 max-w-xl mx-auto">
             Have questions about our auto glass marketplace? We're here to help. Send us a message and we'll respond as soon as possible.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Contact Info */}
-          <div className="space-y-6">
-            <div className="bg-white p-6 border border-slate-200 rounded-sm">
-              <Phone className="h-8 w-8 text-blue-600 mb-3" />
-              <h3 className="font-heading font-bold text-slate-900">Phone</h3>
-              <p className="text-slate-600 mt-1">1-800-GLASS-HUB</p>
-              <p className="text-sm text-slate-500">Mon-Fri 8am-6pm EST</p>
+        {/* Contact Form */}
+        <form onSubmit={handleSubmit} className="bg-white p-8 border border-slate-200 rounded-sm space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Your Name *</label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                data-testid="contact-name"
+              />
             </div>
-            <div className="bg-white p-6 border border-slate-200 rounded-sm">
-              <Mail className="h-8 w-8 text-blue-600 mb-3" />
-              <h3 className="font-heading font-bold text-slate-900">Email</h3>
-              <p className="text-slate-600 mt-1">support@carglasshub.com</p>
-              <p className="text-sm text-slate-500">We reply within 24 hours</p>
-            </div>
-            <div className="bg-white p-6 border border-slate-200 rounded-sm">
-              <MapPin className="h-8 w-8 text-blue-600 mb-3" />
-              <h3 className="font-heading font-bold text-slate-900">Address</h3>
-              <p className="text-slate-600 mt-1">123 Auto Glass Way</p>
-              <p className="text-sm text-slate-500">Detroit, MI 48201</p>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Email *</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                data-testid="contact-email"
+              />
             </div>
           </div>
 
-          {/* Contact Form */}
-          <div className="lg:col-span-2">
-            <form onSubmit={handleSubmit} className="bg-white p-8 border border-slate-200 rounded-sm space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Your Name *</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                    className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    data-testid="contact-name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Email *</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    data-testid="contact-email"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    data-testid="contact-phone"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Subject *</label>
-                  <select
-                    name="subject"
-                    value={formData.subject}
-                    onChange={handleChange}
-                    required
-                    className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    data-testid="contact-subject"
-                  >
-                    <option value="">Select a subject</option>
-                    <option value="General Inquiry">General Inquiry</option>
-                    <option value="Seller Support">Seller Support</option>
-                    <option value="Buyer Support">Buyer Support</option>
-                    <option value="Technical Issue">Technical Issue</option>
-                    <option value="Partnership">Partnership</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Message *</label>
-                <textarea
-                  name="message"
-                  value={formData.message}
-                  onChange={handleChange}
-                  required
-                  rows={6}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="How can we help you?"
-                  data-testid="contact-message"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-slate-900 text-white h-12 rounded-sm font-medium hover:bg-slate-800 transition-colors disabled:opacity-50"
-                data-testid="contact-submit-btn"
-              >
-                {loading ? "Sending..." : "Send Message"}
-              </button>
-            </form>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Subject *</label>
+            <select
+              name="subject"
+              value={formData.subject}
+              onChange={handleChange}
+              required
+              className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              data-testid="contact-subject"
+            >
+              <option value="">Select a subject</option>
+              <option value="General Inquiry">General Inquiry</option>
+              <option value="Seller Support">Seller Support</option>
+              <option value="Buyer Support">Buyer Support</option>
+              <option value="Technical Issue">Technical Issue</option>
+              <option value="Partnership">Partnership</option>
+            </select>
           </div>
-        </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Message *</label>
+            <textarea
+              name="message"
+              value={formData.message}
+              onChange={handleChange}
+              required
+              rows={6}
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="How can we help you?"
+              data-testid="contact-message"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-slate-900 text-white h-12 rounded-sm font-medium hover:bg-slate-800 transition-colors disabled:opacity-50"
+            data-testid="contact-submit-btn"
+          >
+            {loading ? "Sending..." : "Send Message"}
+          </button>
+          
+          {/* Hidden email reference for backend */}
+          <input type="hidden" name="to_email" value="carglasshub44@gmail.com" />
+          
+          <p className="text-center text-xs text-slate-400 mt-4">
+            We typically respond within 24 hours
+          </p>
+        </form>
       </div>
     </div>
   );
