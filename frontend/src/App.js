@@ -114,6 +114,15 @@ const Navigation = () => {
             {user ? (
               <div className="flex items-center gap-4">
                 <span className="text-sm text-slate-600">Welcome, {user.name}</span>
+                {user.user_type === "seller" && (
+                  <Link
+                    to="/dashboard"
+                    className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                    data-testid="dashboard-link"
+                  >
+                    Dashboard
+                  </Link>
+                )}
                 <button
                   onClick={logout}
                   className="text-sm font-medium text-slate-600 hover:text-blue-600"
