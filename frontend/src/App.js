@@ -1682,19 +1682,17 @@ const ReviewsList = ({ installerId }) => {
 const FindInstallers = () => {
   const [installers, setInstallers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchCity, setSearchCity] = useState("");
-  const [searchState, setSearchState] = useState("");
+  const [searchZip, setSearchZip] = useState("");
   const [selectedInstaller, setSelectedInstaller] = useState(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [expandedInstaller, setExpandedInstaller] = useState(null);
   const [toast, setToast] = useState(null);
 
-  const fetchInstallers = async () => {
+  const fetchInstallers = async (zipCode = "") => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (searchCity) params.append("city", searchCity);
-      if (searchState) params.append("state", searchState);
+      if (zipCode) params.append("zip_code", zipCode);
       const res = await axios.get(`${API}/installers?${params.toString()}`);
       setInstallers(res.data);
     } catch (err) {
@@ -1709,13 +1707,13 @@ const FindInstallers = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    fetchInstallers();
+    fetchInstallers(searchZip);
   };
 
   const handleReviewSubmit = () => {
     setShowReviewModal(false);
     setToast({ message: "Review submitted successfully! Thank you for your feedback.", type: "success" });
-    fetchInstallers(); // Refresh to get updated ratings
+    fetchInstallers(searchZip); // Refresh to get updated ratings
   };
 
   return (
@@ -1745,33 +1743,31 @@ const FindInstallers = () => {
           </Link>
         </div>
 
-        {/* Search Form */}
-        <form onSubmit={handleSearch} className="bg-white p-4 border border-slate-200 rounded-sm mb-8">
-          <div className="flex flex-col md:flex-row gap-4">
-            <input
-              type="text"
-              value={searchCity}
-              onChange={(e) => setSearchCity(e.target.value)}
-              placeholder="City"
-              className="flex-1 h-12 px-4 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              data-testid="installer-search-city"
-            />
-            <input
-              type="text"
-              value={searchState}
-              onChange={(e) => setSearchState(e.target.value)}
-              placeholder="State (e.g., CA, NY)"
-              className="w-full md:w-32 h-12 px-4 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              data-testid="installer-search-state"
-            />
+        {/* Search Form - ZIP Code Only */}
+        <form onSubmit={handleSearch} className="bg-white p-6 border border-slate-200 rounded-sm mb-8">
+          <label className="block text-sm font-medium text-slate-700 mb-2">Search by ZIP Code</label>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
+              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+              <input
+                type="text"
+                value={searchZip}
+                onChange={(e) => setSearchZip(e.target.value)}
+                placeholder="Enter ZIP code (e.g., 33101, 90210)"
+                className="w-full h-12 pl-12 pr-4 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                data-testid="installer-search-zip"
+              />
+            </div>
             <button
               type="submit"
-              className="bg-slate-900 text-white px-8 h-12 rounded-sm font-medium hover:bg-slate-800 transition-colors"
+              className="bg-slate-900 text-white px-8 h-12 rounded-sm font-medium hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
               data-testid="installer-search-btn"
             >
-              Search
+              <Search size={18} />
+              Find Installers
             </button>
           </div>
+          <p className="text-sm text-slate-500 mt-2">Enter your ZIP code to find installers in your area</p>
         </form>
 
         {loading ? (
