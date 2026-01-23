@@ -107,11 +107,13 @@ class PartCreate(BaseModel):
     year_end: int
     make: str
     model: str
-    price: float
+    price: Optional[float] = None
+    call_for_price: bool = False
     quantity: int
     condition: str = "New"
     description: Optional[str] = None
     listing_type: str = "for_sale"  # "for_sale" or "private"
+    images: List[str] = []  # Base64 encoded images, up to 3
     
 class PartUpdate(BaseModel):
     part_number: Optional[str] = None
@@ -124,10 +126,12 @@ class PartUpdate(BaseModel):
     make: Optional[str] = None
     model: Optional[str] = None
     price: Optional[float] = None
+    call_for_price: Optional[bool] = None
     quantity: Optional[int] = None
     condition: Optional[str] = None
     description: Optional[str] = None
     listing_type: Optional[str] = None
+    images: Optional[List[str]] = None
 
 class VehicleSearch(BaseModel):
     year: Optional[int] = None
