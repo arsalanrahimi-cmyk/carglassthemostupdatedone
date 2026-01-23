@@ -406,27 +406,102 @@ const Home = () => {
             </div>
 
             {searchType === "part" ? (
-              <form onSubmit={handlePartSearch} className="flex gap-4">
-                <div className="flex-1 relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">#</span>
-                  <input
-                    type="text"
-                    value={partNumber}
-                    onChange={(e) => setPartNumber(e.target.value)}
-                    placeholder="Enter part number (NAGS, OEM, or Interchange)..."
-                    className="w-full h-12 pl-10 pr-4 bg-white text-slate-900 rounded-sm border-0 focus:ring-2 focus:ring-blue-500"
-                    data-testid="part-number-input"
-                  />
+              <form onSubmit={handlePartSearch} className="relative">
+                <div className="flex gap-4">
+                  <div className="flex-1 relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">#</span>
+                    <input
+                      type="text"
+                      value={partNumber}
+                      onChange={(e) => setPartNumber(e.target.value)}
+                      onFocus={() => partNumber.length >= 1 && setShowSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                      placeholder="Enter part number (NAGS, OEM, or Interchange)..."
+                      className="w-full h-12 pl-10 pr-4 bg-white text-slate-900 rounded-sm border-0 focus:ring-2 focus:ring-blue-500"
+                      data-testid="part-number-input"
+                      autoComplete="off"
+                    />
+                    
+                    {/* Smart Suggestions Dropdown */}
+                    {showSuggestions && suggestions.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-sm shadow-xl border border-slate-200 z-50 max-h-80 overflow-y-auto" data-testid="suggestions-dropdown">
+                        {suggestions.map((suggestion, idx) => (
+                          <div key={idx}>
+                            {suggestion.type === "info" && (
+                              <div className="px-4 py-3 bg-blue-50 border-b border-slate-100">
+                                <p className="text-sm text-blue-800 font-medium">{suggestion.message}</p>
+                                <p className="text-xs text-blue-600 mt-1">{suggestion.hint}</p>
+                              </div>
+                            )}
+                            {suggestion.type === "hint" && (
+                              <button
+                                type="button"
+                                onClick={() => selectSuggestion(suggestion)}
+                                className="w-full px-4 py-3 text-left hover:bg-slate-50 border-b border-slate-100 transition-colors"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <span className="bg-slate-900 text-white px-2 py-1 rounded text-sm font-mono font-bold">{suggestion.prefix}</span>
+                                  <div>
+                                    <p className="text-slate-900 font-medium">{suggestion.meaning}</p>
+                                    <p className="text-xs text-slate-500">Examples: {suggestion.examples.join(", ")}</p>
+                                  </div>
+                                </div>
+                              </button>
+                            )}
+                            {suggestion.type === "part" && (
+                              <button
+                                type="button"
+                                onClick={() => selectSuggestion(suggestion)}
+                                className="w-full px-4 py-3 text-left hover:bg-slate-50 border-b border-slate-100 transition-colors"
+                              >
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <p className="text-slate-900 font-mono font-bold">{suggestion.number}</p>
+                                    <p className="text-sm text-slate-600">{suggestion.vehicle}</p>
+                                  </div>
+                                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{suggestion.partType}</span>
+                                </div>
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                        <div className="px-4 py-2 bg-slate-50 text-xs text-slate-500">
+                          Type prefix (FW, DW, RW) or any part of the number to search
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 h-12 rounded-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-50"
+                    data-testid="part-search-btn"
+                  >
+                    <Search size={18} />
+                    Search
+                  </button>
                 </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 h-12 rounded-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-50"
-                  data-testid="part-search-btn"
-                >
-                  <Search size={18} />
-                  Search
-                </button>
+                
+                {/* Part Number Guide */}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className="text-slate-400 text-xs">Common prefixes:</span>
+                  {[
+                    { code: "FW", label: "Windshield" },
+                    { code: "DW", label: "Door" },
+                    { code: "RW", label: "Rear" },
+                    { code: "QG", label: "Quarter" }
+                  ].map(item => (
+                    <button
+                      key={item.code}
+                      type="button"
+                      onClick={() => setPartNumber(item.code)}
+                      className="text-xs bg-white/20 hover:bg-white/30 text-white px-2 py-1 rounded transition-colors"
+                    >
+                      <span className="font-mono font-bold">{item.code}</span>
+                      <span className="ml-1 opacity-70">= {item.label}</span>
+                    </button>
+                  ))}
+                </div>
               </form>
             ) : (
               <form onSubmit={handleVehicleSearch} className="grid grid-cols-1 md:grid-cols-5 gap-4">
