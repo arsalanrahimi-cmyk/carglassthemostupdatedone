@@ -418,6 +418,101 @@ async def get_installer_reviews(installer_id: str):
     reviews = await db.reviews.find({"installer_id": installer_id}, {"_id": 0}).sort("created_at", -1).to_list(100)
     return reviews
 
+# ==================== ACCOUNT MANAGEMENT ROUTES ====================
+
+@api_router.post("/auth/forgot-password", response_model=dict)
+async def forgot_password(email: EmailStr):
+    user = await db.users.find_one({"email": email})
+    if not user:
+        # Don't reveal if email exists or not for security
+        return {"success": True, "message": "If this email exists, a reset code has been sent."}
+    
+    # Generate reset code (6 digits)
+    reset_code = ''.join([str(secrets.randbelow(10)) for _ in range(6)])
+    expiry = datetime.now(timezone.utc) + timedelta(hours=1)
+    
+    # Store reset code
+    await db.password_resets.delete_many({"email": email})  # Remove old codes
+    await db.password_resets.insert_one({
+        "email": email,
+        "code": reset_code,
+        "expires_at": expiry.isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # In production, this would send an email. For now, we'll return the code.
+    return {
+        "success": True, 
+        "message": "Reset code generated. Check your email.",
+        "reset_code": reset_code  # Remove this in production - only for demo
+    }
+
+@api_router.post("/auth/reset-password", response_model=dict)
+async def reset_password(email: EmailStr, code: str, new_password: str):
+    # Find the reset code
+    reset = await db.password_resets.find_one({"email": email, "code": code})
+    if not reset:
+        raise HTTPException(status_code=400, detail="Invalid reset code")
+    
+    # Check if expired
+    expires_at = datetime.fromisoformat(reset["expires_at"].replace('Z', '+00:00'))
+    if datetime.now(timezone.utc) > expires_at:
+        await db.password_resets.delete_one({"email": email})
+        raise HTTPException(status_code=400, detail="Reset code has expired")
+    
+    # Update password
+    await db.users.update_one(
+        {"email": email},
+        {"$set": {"password": hash_password(new_password)}}
+    )
+    
+    # Delete the reset code
+    await db.password_resets.delete_one({"email": email})
+    
+    return {"success": True, "message": "Password reset successfully"}
+
+@api_router.post("/auth/deactivate", response_model=dict)
+async def deactivate_account(current_user: dict = Depends(get_current_user)):
+    user_id = current_user["id"]
+    
+    # Mark user as deactivated instead of deleting
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"is_active": False, "deactivated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    # If seller, deactivate their listings
+    if current_user.get("seller_id"):
+        await db.parts.update_many(
+            {"seller_id": current_user["seller_id"]},
+            {"$set": {"listing_type": "private"}}
+        )
+        await db.share_links.delete_many({"seller_id": current_user["seller_id"]})
+    
+    # If installer, mark as inactive
+    if current_user.get("installer_id"):
+        await db.installers.update_one(
+            {"id": current_user["installer_id"]},
+            {"$set": {"is_active": False}}
+        )
+    
+    return {"success": True, "message": "Account deactivated successfully"}
+
+@api_router.post("/auth/change-password", response_model=dict)
+async def change_password(current_password: str, new_password: str, current_user: dict = Depends(get_current_user)):
+    # Verify current password
+    user = await db.users.find_one({"id": current_user["id"]})
+    if not verify_password(current_password, user["password"]):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    
+    # Update password
+    await db.users.update_one(
+        {"id": current_user["id"]},
+        {"$set": {"password": hash_password(new_password)}}
+    )
+    
+    return {"success": True, "message": "Password changed successfully"}
+
 # ==================== SHAREABLE INVENTORY ROUTES ====================
 
 @api_router.post("/inventory/share", response_model=dict)
