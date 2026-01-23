@@ -693,7 +693,7 @@ const Login = () => {
               data-testid="login-email-input"
             />
           </div>
-          <div className="mb-6">
+          <div className="mb-4">
             <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
             <input
               type="password"
@@ -705,6 +705,17 @@ const Login = () => {
               data-testid="login-password-input"
             />
           </div>
+          {!isRegister && (
+            <div className="mb-6 text-right">
+              <Link
+                to="/forgot-password"
+                className="text-sm text-blue-600 hover:text-blue-700"
+                data-testid="forgot-password-link"
+              >
+                Forgot Password?
+              </Link>
+            </div>
+          )}
           <button
             type="submit"
             disabled={loading}
