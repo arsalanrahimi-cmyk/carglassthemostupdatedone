@@ -268,7 +268,7 @@ async def login_user(credentials: UserLogin):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
     # Check if account is deactivated
-    if user.get("is_active") == False:
+    if user.get("is_active") is False:
         raise HTTPException(status_code=401, detail="This account has been deactivated. Please contact support.")
     
     token = create_token(user["id"], user["user_type"])
