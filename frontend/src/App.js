@@ -276,7 +276,7 @@ const Home = () => {
               Find the Correct <span className="text-blue-400">Auto Glass</span> For Your Vehicle in Your Area
             </h1>
             <p className="text-slate-300 text-lg mb-8">
-              The nation's leading marketplace for automotive glass. Search thousands of windshields, door glass, and more from trusted sellers near you.
+              The nation's leading marketplace for automotive glass. Search thousands of windshields, door glass, and more from trusted sellers near you, or add your shop inventory in our database private or public for free and list unlimited items.
             </p>
           </div>
 
