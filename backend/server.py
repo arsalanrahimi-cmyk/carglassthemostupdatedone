@@ -5,6 +5,7 @@ from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
+import asyncio
 from pathlib import Path
 from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional
@@ -26,6 +27,21 @@ db = client[os.environ['DB_NAME']]
 JWT_SECRET = os.environ.get('JWT_SECRET', secrets.token_hex(32))
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24
+
+# Email Configuration (Resend)
+RESEND_API_KEY = os.environ.get('RESEND_API_KEY')
+SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'onboarding@resend.dev')
+
+# Initialize Resend if API key is available
+resend_client = None
+if RESEND_API_KEY:
+    try:
+        import resend
+        resend.api_key = RESEND_API_KEY
+        resend_client = resend
+        logging.info("Resend email service initialized")
+    except ImportError:
+        logging.warning("Resend library not installed. Email sending disabled.")
 
 # Create the main app
 app = FastAPI(title="CarGlassHub API")
