@@ -2206,6 +2206,13 @@ const AddPartModal = ({ token, onClose, onSuccess, editingPart }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+          {/* Smart Defaults Info */}
+          <div className="bg-green-50 p-3 rounded-sm border border-green-200 mb-2">
+            <p className="text-xs text-green-800">
+              <span className="font-medium">✓ Easy Mode:</span> All fields are optional! Just fill in what you know - we'll use smart defaults for the rest.
+            </p>
+          </div>
+
           {/* Listing Type Toggle - At the top */}
           <div className="bg-slate-50 p-4 rounded-sm border border-slate-200">
             <label className="block text-sm font-medium text-slate-700 mb-3">Listing Type *</label>
