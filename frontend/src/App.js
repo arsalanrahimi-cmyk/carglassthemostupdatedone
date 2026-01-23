@@ -1869,8 +1869,25 @@ const Footer = () => {
             </ul>
           </div>
         </div>
-        <div className="border-t border-slate-800 mt-8 pt-8 text-center text-sm text-slate-500">
-          © {new Date().getFullYear()} CarGlassHub. All rights reserved.
+        
+        {/* Disclaimer */}
+        <div className="border-t border-slate-800 mt-8 pt-8">
+          <div className="bg-slate-800/50 rounded-sm p-4 mb-6">
+            <h5 className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Disclaimer</h5>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              CarGlassHub is an online marketplace platform that connects buyers with sellers of automotive glass products and services. 
+              We do not participate in, facilitate, or guarantee any transactions between buyers and sellers. CarGlassHub is not responsible 
+              for the quality, safety, legality, or any other aspect of the products or services listed. All transactions are conducted 
+              directly between buyers and sellers at their own risk. We strongly recommend that users exercise due diligence, verify seller 
+              credentials, inspect products before purchase, and use secure payment methods. CarGlassHub shall not be held liable for any 
+              financial loss, damages, disputes, or issues arising from transactions conducted through this platform. By using this website, 
+              you acknowledge and agree to these terms.
+            </p>
+          </div>
+          
+          <div className="text-center text-sm text-slate-500">
+            © {new Date().getFullYear()} CarGlassHub. All rights reserved.
+          </div>
         </div>
       </div>
     </footer>
