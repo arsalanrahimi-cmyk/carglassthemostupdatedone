@@ -2617,9 +2617,9 @@ const BulkUploadModal = ({ token, onClose, onSuccess }) => {
         <div className="p-6 space-y-6">
           {/* Step 1: Download Template */}
           <div className="bg-blue-50 p-4 rounded-sm border border-blue-200">
-            <h4 className="font-medium text-blue-900 mb-2">Step 1: Download Template</h4>
+            <h4 className="font-medium text-blue-900 mb-2">Step 1: Download Template (Optional)</h4>
             <p className="text-sm text-blue-700 mb-3">
-              Download our CSV template with sample data to see the correct format.
+              Download our CSV template for reference. You can also create your own spreadsheet - missing fields will use smart defaults.
             </p>
             <button
               onClick={downloadTemplate}
@@ -2631,6 +2631,14 @@ const BulkUploadModal = ({ token, onClose, onSuccess }) => {
               </svg>
               Download CSV Template
             </button>
+            
+            <div className="mt-3 p-3 bg-green-50 rounded border border-green-200">
+              <p className="text-xs text-green-800 font-medium mb-1">✓ Smart Defaults Applied</p>
+              <p className="text-xs text-green-700">
+                Missing fields will auto-fill: Quantity → 1, Condition → New, Year → Current Year, 
+                No Price → Call for Price, Missing Make → Universal, Missing Model → All Models
+              </p>
+            </div>
           </div>
 
           {/* Step 2: Upload File */}
