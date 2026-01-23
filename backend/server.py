@@ -579,7 +579,7 @@ async def get_part(part_id: str):
 @api_router.get("/vehicles/years", response_model=List[int])
 async def get_years():
     current_year = datetime.now().year
-    return list(range(current_year + 1, 1979, -1))
+    return list(range(current_year + 1, 1949, -1))
 
 @api_router.get("/vehicles/makes", response_model=List[str])
 async def get_makes():
