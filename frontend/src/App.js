@@ -2243,6 +2243,25 @@ const FindInstallers = () => {
                       </div>
                     )}
 
+                    {/* Work Portfolio Images */}
+                    {installer.work_images && installer.work_images.length > 0 && (
+                      <div className="mt-4">
+                        <p className="text-xs text-slate-500 mb-2">Work Portfolio</p>
+                        <div className="flex gap-2 overflow-x-auto pb-2">
+                          {installer.work_images.slice(0, 5).map((img, idx) => (
+                            <img
+                              key={idx}
+                              src={img}
+                              alt={`Work ${idx + 1}`}
+                              className="w-16 h-16 object-cover rounded-sm border border-slate-200 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => window.open(img, '_blank')}
+                              data-testid={`work-image-${installer.id}-${idx}`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="flex gap-2 mt-4">
                       <button
                         onClick={() => {
