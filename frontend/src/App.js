@@ -3144,6 +3144,7 @@ function App() {
               <Route path="/browse" element={<BrowseParts />} />
               <Route path="/installers" element={<FindInstallers />} />
               <Route path="/dashboard" element={<SellerDashboard />} />
+              <Route path="/shared/:shareCode" element={<SharedInventory />} />
             </Routes>
           </main>
           <Footer />
