@@ -1,0 +1,127 @@
+{
+  "identity": {
+    "name": "E1",
+    "role": "The Anti-AI Designer",
+    "mission": "Create a top 1% automotive marketplace that feels industrial, precise, and trustworthy, avoiding generic SaaS aesthetics.",
+    "principles": [
+      "Fusion over Imitation: Mix Industrial Precision with Consumer Simplicity.",
+      "Emotion First: Trust and Clarity are the core emotions.",
+      "Content is King: Data (Part Numbers, Specs) must be legible and beautiful.",
+      "Zoom In: Use macro photography of glass/parts to create texture.",
+      "Negative Space: Use whitespace to separate dense data tables."
+    ]
+  },
+  "typography": {
+    "fonts": {
+      "heading": {
+        "family": "Barlow Condensed",
+        "url": "https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&display=swap",
+        "usage": "All Headings (H1-H6), Price Tags, Part Numbers",
+        "weights": ["600", "700", "800"]
+      },
+      "body": {
+        "family": "Manrope",
+        "url": "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap",
+        "usage": "Paragraphs, UI Labels, Inputs, Table Data",
+        "weights": ["400", "500"]
+      }
+    },
+    "rules": [
+      "Headings must use 'tracking-tight' or 'tracking-tighter'.",
+      "Part Numbers must be 'font-mono' or 'Barlow Condensed' for readability.",
+      "Uppercase labels must use 'tracking-widest' and 'text-xs'."
+    ]
+  },
+  "colors": {
+    "theme": "light",
+    "palette": {
+      "primary": {
+        "name": "Deep Cobalt",
+        "hex": "#0F172A",
+        "tailwind": "bg-slate-900 text-white"
+      },
+      "accent": {
+        "name": "Electric Azure",
+        "hex": "#0066FF",
+        "tailwind": "bg-blue-600 hover:bg-blue-700 text-white"
+      },
+      "background": {
+        "default": "#FFFFFF",
+        "subtle": "#F8FAFC",
+        "dark": "#020617"
+      },
+      "border": {
+        "default": "#E2E8F0",
+        "active": "#94A3B8"
+      },
+      "text": {
+        "primary": "#0F172A",
+        "secondary": "#64748B",
+        "muted": "#94A3B8"
+      }
+    },
+    "gradients": {
+      "hero": "bg-gradient-to-r from-slate-900 to-slate-800",
+      "glass": "bg-white/70 backdrop-blur-xl border border-white/20 shadow-xl"
+    }
+  },
+  "layout": {
+    "spacing": {
+      "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+      "section_padding": "py-16 lg:py-24",
+      "element_gap": "gap-6 or gap-8"
+    },
+    "grid_system": {
+      "bento": "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6",
+      "listing": "grid grid-cols-1 gap-4"
+    },
+    "border_radius": {
+      "default": "rounded-none",
+      "buttons": "rounded-sm",
+      "cards": "rounded-sm"
+    }
+  },
+  "components": {
+    "buttons": {
+      "style": "Sharp edges or very slight rounding (rounded-sm). High contrast.",
+      "primary": "bg-slate-900 text-white hover:bg-slate-800 shadow-lg hover:shadow-xl transition-all",
+      "secondary": "bg-white border border-slate-200 text-slate-900 hover:bg-slate-50"
+    },
+    "cards": {
+      "style": "Flat, 1px border (border-slate-200), no shadow by default. Shadow-lg on hover.",
+      "listing_card": "flex flex-row items-center justify-between p-6 border-b border-slate-100 hover:bg-slate-50 transition-colors"
+    },
+    "inputs": {
+      "style": "h-12 bg-slate-50 border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-sm"
+    },
+    "navigation": {
+      "style": "Sticky, Glassmorphism effect (bg-white/80 backdrop-blur-md). Border-b border-slate-200."
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": "Use for search overlays and sticky headers to mimic 'Auto Glass'.",
+    "technical_borders": "Use 'border-r border-slate-200' on grid items to create a technical spec sheet look.",
+    "micro_interactions": "Buttons should have a slight 'scale-95' on click. Links should have a growing underline on hover."
+  },
+  "assets": {
+    "images": {
+      "hero_bg": "https://images.pexels.com/photos/7409799/pexels-photo-7409799.jpeg",
+      "mechanic_working": "https://images.pexels.com/photos/8986132/pexels-photo-8986132.jpeg",
+      "workshop_interior": "https://images.pexels.com/photos/4489718/pexels-photo-4489718.jpeg",
+      "windshield_detail": "https://images.unsplash.com/photo-1761810324656-f94f0bc4a597?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxNzV8MHwxfHNlYXJjaHw0fHxjYXIlMjB3aW5kc2hpZWxkJTIwY2xvc2UlMjB1cCUyMHJlZmxlY3Rpb258ZW58MHx8fHwxNzY5MTQ2MjE3fDA&ixlib=rb-4.1.0&q=85",
+      "logo_placeholder": "https://images.unsplash.com/photo-1673909447381-f0299cf37d29?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODh8MHwxfHNlYXJjaHwxfHxhdXRvbW90aXZlJTIwYnJhbmQlMjBsb2dvJTIwd2hpdGUlMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc2OTE0NjIyMHww&ixlib=rb-4.1.0&q=85"
+    },
+    "icons": "Use 'lucide-react' for all UI icons. Use 'Wrench', 'Car', 'Search', 'MapPin', 'Phone', 'User' icons."
+  },
+  "universal_guidelines": [
+    "DO NOT use generic 'SaaS Blue' gradients. Use solid, deep colors.",
+    "DO NOT center text in the hero unless it is a massive headline.",
+    "DO NOT use rounded-xl or rounded-2xl. Keep it sharp (rounded-sm) for an industrial feel.",
+    "ALWAYS use 'data-testid' on interactive elements.",
+    "ALWAYS use 'Manrope' for body text and 'Barlow Condensed' for headings.",
+    "Ensure all text has sufficient contrast (APCA/WCAG AA).",
+    "Use 'sonner' for toast notifications.",
+    "Use 'lucide-react' for icons."
+  ],
+  "instructions_to_main_agent": "You are building the frontend for Auto Glass Hub. Follow these guidelines strictly. Use the provided image URLs for the respective sections. Implement the 'Barlow Condensed' and 'Manrope' fonts immediately in the index.css or index.html. Use the defined color palette in tailwind.config.js."
+}
