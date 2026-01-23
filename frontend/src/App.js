@@ -402,9 +402,9 @@ const Home = () => {
                       type="text"
                       value={partNumber}
                       onChange={(e) => setPartNumber(e.target.value)}
-                      onFocus={() => partNumber.length >= 1 && setShowSuggestions(true)}
+                      onFocus={() => partNumber.length >= 2 && setShowSuggestions(true)}
                       onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                      placeholder="Enter part number (NAGS, OEM, or Interchange)..."
+                      placeholder="Enter part number (NAGS, OEM, with or without FW/DW/DD/FD/FQ/DQ/DB/DV/FV)"
                       className="w-full h-12 pl-10 pr-4 bg-white text-slate-900 rounded-sm border-0 focus:ring-2 focus:ring-blue-500"
                       data-testid="part-number-input"
                       autoComplete="off"
