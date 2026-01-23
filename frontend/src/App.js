@@ -1163,7 +1163,7 @@ const InstallerRegister = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Website</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Website <span className="text-slate-400">(Optional)</span></label>
               <input
                 type="url"
                 name="website"
@@ -1177,13 +1177,13 @@ const InstallerRegister = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Street Address *</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Street Address <span className="text-slate-400">(Optional)</span></label>
             <input
               type="text"
               name="address"
               value={formData.address}
               onChange={handleChange}
-              required
+              placeholder="Enter your business address"
               className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               data-testid="installer-address"
             />
@@ -1249,7 +1249,7 @@ const InstallerRegister = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Certifications</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Certifications <span className="text-slate-400">(Optional)</span></label>
             <input
               type="text"
               name="certifications"
@@ -1262,7 +1262,7 @@ const InstallerRegister = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Business Description</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Business Description <span className="text-slate-400">(Optional)</span></label>
             <textarea
               name="description"
               value={formData.description}
