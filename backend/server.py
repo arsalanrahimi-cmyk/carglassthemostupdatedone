@@ -184,6 +184,41 @@ def decode_token(token: str) -> dict:
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
+async def send_password_reset_email(email: str, reset_code: str) -> bool:
+    """Send password reset email using Resend"""
+    if not resend_client:
+        logging.warning(f"Email service not configured. Reset code for {email}: {reset_code}")
+        return False
+    
+    html_content = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #1e293b;">Password Reset Request</h2>
+        <p>You requested to reset your password for your CarGlassHub account.</p>
+        <p>Your verification code is:</p>
+        <div style="background-color: #f1f5f9; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #2563eb;">{reset_code}</span>
+        </div>
+        <p>This code will expire in 1 hour.</p>
+        <p>If you didn't request this, please ignore this email.</p>
+        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+        <p style="color: #64748b; font-size: 12px;">CarGlassHub - Auto Glass Marketplace</p>
+    </div>
+    """
+    
+    try:
+        params = {
+            "from": SENDER_EMAIL,
+            "to": [email],
+            "subject": "Your CarGlassHub Password Reset Code",
+            "html": html_content
+        }
+        await asyncio.to_thread(resend_client.Emails.send, params)
+        logging.info(f"Password reset email sent to {email}")
+        return True
+    except Exception as e:
+        logging.error(f"Failed to send email to {email}: {str(e)}")
+        return False
+
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     if not credentials:
         raise HTTPException(status_code=401, detail="Not authenticated")
