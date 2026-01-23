@@ -1040,6 +1040,7 @@ const InstallerRegister = () => {
     "Windshield Repair",
     "Side Window Replacement",
     "Rear Window Replacement",
+    "Window Regulator/Motor Replacement",
     "Sunroof Repair",
     "Mobile Service",
     "ADAS Calibration",
