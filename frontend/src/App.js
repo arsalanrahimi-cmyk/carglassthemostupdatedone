@@ -2535,10 +2535,18 @@ const BulkUploadModal = ({ token, onClose, onSuccess }) => {
         row[header] = value;
       });
       
-      // Set defaults
+      // Set smart defaults for missing fields
       if (!row.listing_type) row.listing_type = "for_sale";
       if (!row.condition) row.condition = "New";
       if (!row.images) row.images = [];
+      if (!row.quantity || row.quantity === 0) row.quantity = 1;
+      if (!row.year_start) row.year_start = new Date().getFullYear();
+      if (!row.year_end) row.year_end = row.year_start || new Date().getFullYear();
+      if (!row.part_type) row.part_type = "Windshield";
+      if (!row.make) row.make = "Universal";
+      if (!row.model) row.model = "All Models";
+      if (!row.part_number) row.part_number = `PART-${Date.now()}-${i}`;
+      if (!row.price && !row.call_for_price) row.call_for_price = true;
       
       data.push(row);
     }
@@ -2567,29 +2575,14 @@ const BulkUploadModal = ({ token, onClose, onSuccess }) => {
     reader.readAsText(selectedFile);
   };
 
-  const validateData = () => {
-    const validationErrors = [];
-    parsedData.forEach((row, idx) => {
-      if (!row.part_number) validationErrors.push({ row: idx + 2, error: "Part number is required" });
-      if (!row.part_type) validationErrors.push({ row: idx + 2, error: "Part type is required" });
-      if (!row.year_start) validationErrors.push({ row: idx + 2, error: "Year start is required" });
-      if (!row.year_end) validationErrors.push({ row: idx + 2, error: "Year end is required" });
-      if (!row.make) validationErrors.push({ row: idx + 2, error: "Make is required" });
-      if (!row.model) validationErrors.push({ row: idx + 2, error: "Model is required" });
-      if (!row.call_for_price && !row.price) validationErrors.push({ row: idx + 2, error: "Price or Call for Price is required" });
-      if (!row.quantity) validationErrors.push({ row: idx + 2, error: "Quantity is required" });
-    });
-    return validationErrors;
-  };
-
   const handleUpload = async () => {
-    const validationErrors = validateData();
-    if (validationErrors.length > 0) {
-      setErrors(validationErrors.slice(0, 10)); // Show first 10 errors
+    if (parsedData.length === 0) {
+      setErrors([{ row: 0, error: "No data to upload" }]);
       return;
     }
     
     setUploading(true);
+    setErrors([]);
     try {
       const res = await axios.post(`${API}/parts/bulk`, { parts: parsedData }, {
         headers: { Authorization: `Bearer ${token}` }
