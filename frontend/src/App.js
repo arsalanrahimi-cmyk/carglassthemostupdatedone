@@ -1865,8 +1865,7 @@ const Footer = () => {
           <div>
             <h4 className="font-heading font-bold mb-4">Contact</h4>
             <ul className="space-y-2 text-sm text-slate-400">
-              <li>1-800-GLASS-HUB</li>
-              <li>support@carglasshub.com</li>
+              <li><Link to="/contact" className="hover:text-white">Send us a message</Link></li>
             </ul>
           </div>
         </div>
