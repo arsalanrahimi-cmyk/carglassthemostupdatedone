@@ -1958,15 +1958,33 @@ const SellerDashboard = () => {
                   {parts.map(part => (
                     <tr key={part.id} className="hover:bg-slate-50" data-testid={`part-row-${part.id}`}>
                       <td className="px-6 py-4">
-                        <p className="font-medium text-slate-900">{part.part_type}</p>
-                        <p className="text-sm text-slate-500 font-mono">{part.part_number}</p>
+                        <div className="flex items-center gap-3">
+                          {part.images && part.images.length > 0 ? (
+                            <img src={part.images[0]} alt="" className="w-12 h-12 object-cover rounded-sm" />
+                          ) : (
+                            <div className="w-12 h-12 bg-slate-100 rounded-sm flex items-center justify-center">
+                              <Car className="w-6 h-6 text-slate-400" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-medium text-slate-900">{part.part_type}</p>
+                            <p className="text-sm text-slate-500 font-mono">{part.part_number}</p>
+                          </div>
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <p className="text-slate-700">{part.year_start}-{part.year_end} {part.make}</p>
                         <p className="text-sm text-slate-500">{part.model}</p>
                       </td>
                       <td className="px-6 py-4">
-                        <p className="font-heading font-bold text-slate-900">${part.price}</p>
+                        {part.call_for_price ? (
+                          <span className="inline-flex items-center gap-1 text-amber-600 font-medium">
+                            <Phone size={14} />
+                            Call
+                          </span>
+                        ) : (
+                          <p className="font-heading font-bold text-slate-900">${part.price}</p>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <p className="text-slate-700">{part.quantity}</p>
