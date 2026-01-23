@@ -2417,24 +2417,23 @@ const AddPartModal = ({ token, onClose, onSuccess, editingPart }) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Quantity *</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Quantity</label>
               <input
                 type="number"
                 name="quantity"
                 value={formData.quantity}
                 onChange={handleChange}
-                required
                 min="1"
+                placeholder="Default: 1"
                 className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 text-sm"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Condition *</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Condition</label>
               <select
                 name="condition"
                 value={formData.condition}
                 onChange={handleChange}
-                required
                 className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 text-sm"
               >
                 <option value="New">New</option>
