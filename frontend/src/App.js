@@ -2412,6 +2412,7 @@ function App() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/browse" element={<BrowseParts />} />
               <Route path="/installers" element={<FindInstallers />} />
+              <Route path="/dashboard" element={<SellerDashboard />} />
             </Routes>
           </main>
           <Footer />
