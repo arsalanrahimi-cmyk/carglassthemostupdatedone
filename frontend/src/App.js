@@ -2457,6 +2457,324 @@ const AddPartModal = ({ token, onClose, onSuccess, editingPart }) => {
   );
 };
 
+// Bulk Upload Modal Component
+const BulkUploadModal = ({ token, onClose, onSuccess }) => {
+  const [file, setFile] = useState(null);
+  const [parsedData, setParsedData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [errors, setErrors] = useState([]);
+
+  const templateHeaders = [
+    "part_number", "nags_number", "oem_number", "part_type", 
+    "year_start", "year_end", "make", "model", "price", 
+    "call_for_price", "quantity", "condition", "listing_type", "description"
+  ];
+
+  const downloadTemplate = () => {
+    const csvContent = [
+      templateHeaders.join(","),
+      "FW02537,FW02537,,Windshield,2018,2023,Toyota,Camry,150,false,5,New,for_sale,OEM Quality windshield",
+      "DW01456,,,Front Door Glass - Driver,2019,2024,Honda,Accord,,true,3,Used - Like New,for_sale,Call for best price",
+      "RW02134,,,Rear Window/Back Glass,2020,2024,Ford,F-150,200,false,2,New,private,Inventory item"
+    ].join("\n");
+    
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "carglasshub_bulk_upload_template.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const parseCSV = (text) => {
+    const lines = text.split("\n").filter(line => line.trim());
+    const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
+    
+    const data = [];
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(",");
+      const row = {};
+      headers.forEach((header, idx) => {
+        let value = values[idx]?.trim() || "";
+        // Convert types
+        if (header === "year_start" || header === "year_end" || header === "quantity") {
+          value = parseInt(value) || 0;
+        } else if (header === "price") {
+          value = value ? parseFloat(value) : null;
+        } else if (header === "call_for_price") {
+          value = value.toLowerCase() === "true";
+        }
+        row[header] = value;
+      });
+      
+      // Set defaults
+      if (!row.listing_type) row.listing_type = "for_sale";
+      if (!row.condition) row.condition = "New";
+      if (!row.images) row.images = [];
+      
+      data.push(row);
+    }
+    return data;
+  };
+
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (!selectedFile) return;
+    
+    setFile(selectedFile);
+    setLoading(true);
+    setErrors([]);
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target.result;
+        const data = parseCSV(text);
+        setParsedData(data);
+      } catch (err) {
+        setErrors([{ row: 0, error: "Failed to parse file. Please check the format." }]);
+      }
+      setLoading(false);
+    };
+    reader.readAsText(selectedFile);
+  };
+
+  const validateData = () => {
+    const validationErrors = [];
+    parsedData.forEach((row, idx) => {
+      if (!row.part_number) validationErrors.push({ row: idx + 2, error: "Part number is required" });
+      if (!row.part_type) validationErrors.push({ row: idx + 2, error: "Part type is required" });
+      if (!row.year_start) validationErrors.push({ row: idx + 2, error: "Year start is required" });
+      if (!row.year_end) validationErrors.push({ row: idx + 2, error: "Year end is required" });
+      if (!row.make) validationErrors.push({ row: idx + 2, error: "Make is required" });
+      if (!row.model) validationErrors.push({ row: idx + 2, error: "Model is required" });
+      if (!row.call_for_price && !row.price) validationErrors.push({ row: idx + 2, error: "Price or Call for Price is required" });
+      if (!row.quantity) validationErrors.push({ row: idx + 2, error: "Quantity is required" });
+    });
+    return validationErrors;
+  };
+
+  const handleUpload = async () => {
+    const validationErrors = validateData();
+    if (validationErrors.length > 0) {
+      setErrors(validationErrors.slice(0, 10)); // Show first 10 errors
+      return;
+    }
+    
+    setUploading(true);
+    try {
+      const res = await axios.post(`${API}/parts/bulk`, { parts: parsedData }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (res.data.errors && res.data.errors.length > 0) {
+        setErrors(res.data.errors);
+      }
+      
+      onSuccess(res.data.created_count);
+    } catch (error) {
+      setErrors([{ row: 0, error: error.response?.data?.detail || "Upload failed" }]);
+    }
+    setUploading(false);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto" onClick={onClose}>
+      <div className="bg-white rounded-sm max-w-4xl w-full my-8" onClick={e => e.stopPropagation()}>
+        <div className="p-6 border-b border-slate-200">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="font-heading text-xl font-bold text-slate-900">Bulk Upload Parts</h3>
+              <p className="text-sm text-slate-600 mt-1">Upload a CSV file to add multiple parts at once</p>
+            </div>
+            <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+              <X size={24} />
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6 space-y-6">
+          {/* Step 1: Download Template */}
+          <div className="bg-blue-50 p-4 rounded-sm border border-blue-200">
+            <h4 className="font-medium text-blue-900 mb-2">Step 1: Download Template</h4>
+            <p className="text-sm text-blue-700 mb-3">
+              Download our CSV template with sample data to see the correct format.
+            </p>
+            <button
+              onClick={downloadTemplate}
+              className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-sm text-sm font-medium hover:bg-blue-700 transition-colors"
+              data-testid="download-template-btn"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Download CSV Template
+            </button>
+          </div>
+
+          {/* Step 2: Upload File */}
+          <div className="bg-slate-50 p-4 rounded-sm border border-slate-200">
+            <h4 className="font-medium text-slate-900 mb-2">Step 2: Upload Your File</h4>
+            <p className="text-sm text-slate-600 mb-3">
+              Fill in your parts data and upload the CSV file.
+            </p>
+            <label className="block">
+              <div className="border-2 border-dashed border-slate-300 rounded-sm p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
+                <svg className="w-12 h-12 text-slate-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                {file ? (
+                  <p className="text-slate-900 font-medium">{file.name}</p>
+                ) : (
+                  <p className="text-slate-600">Click to select CSV file or drag and drop</p>
+                )}
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  data-testid="bulk-upload-input"
+                />
+              </div>
+            </label>
+          </div>
+
+          {/* Preview */}
+          {loading && (
+            <div className="text-center py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="text-sm text-slate-600 mt-2">Parsing file...</p>
+            </div>
+          )}
+
+          {parsedData.length > 0 && !loading && (
+            <div>
+              <h4 className="font-medium text-slate-900 mb-2">
+                Preview ({parsedData.length} parts found)
+              </h4>
+              <div className="border border-slate-200 rounded-sm overflow-hidden">
+                <div className="overflow-x-auto max-h-64">
+                  <table className="w-full text-sm">
+                    <thead className="bg-slate-50 border-b border-slate-200 sticky top-0">
+                      <tr>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-slate-600">#</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-slate-600">Part #</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-slate-600">Type</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-slate-600">Vehicle</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-slate-600">Price</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-slate-600">Qty</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-slate-600">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {parsedData.slice(0, 50).map((part, idx) => (
+                        <tr key={idx} className="hover:bg-slate-50">
+                          <td className="px-3 py-2 text-slate-500">{idx + 1}</td>
+                          <td className="px-3 py-2 font-mono text-slate-900">{part.part_number}</td>
+                          <td className="px-3 py-2 text-slate-700">{part.part_type}</td>
+                          <td className="px-3 py-2 text-slate-700">{part.year_start}-{part.year_end} {part.make} {part.model}</td>
+                          <td className="px-3 py-2">
+                            {part.call_for_price ? (
+                              <span className="text-amber-600">Call</span>
+                            ) : (
+                              <span className="text-slate-900">${part.price}</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-slate-700">{part.quantity}</td>
+                          <td className="px-3 py-2">
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${
+                              part.listing_type === "private" 
+                                ? "bg-slate-100 text-slate-600" 
+                                : "bg-green-100 text-green-700"
+                            }`}>
+                              {part.listing_type === "private" ? "Private" : "For Sale"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {parsedData.length > 50 && (
+                  <div className="bg-slate-50 px-3 py-2 text-sm text-slate-600 border-t border-slate-200">
+                    Showing first 50 of {parsedData.length} parts
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Errors */}
+          {errors.length > 0 && (
+            <div className="bg-red-50 p-4 rounded-sm border border-red-200">
+              <h4 className="font-medium text-red-900 mb-2">Errors Found</h4>
+              <ul className="text-sm text-red-700 space-y-1">
+                {errors.map((err, idx) => (
+                  <li key={idx}>Row {err.row}: {err.error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Column Reference */}
+          <details className="text-sm">
+            <summary className="cursor-pointer text-slate-600 hover:text-slate-900">
+              View column reference
+            </summary>
+            <div className="mt-2 bg-slate-50 p-4 rounded-sm text-xs">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-slate-200">
+                    <th className="text-left py-1 pr-4">Column</th>
+                    <th className="text-left py-1 pr-4">Required</th>
+                    <th className="text-left py-1">Description</th>
+                  </tr>
+                </thead>
+                <tbody className="text-slate-600">
+                  <tr><td className="py-1 pr-4 font-mono">part_number</td><td>Yes</td><td>Your part number</td></tr>
+                  <tr><td className="py-1 pr-4 font-mono">nags_number</td><td>No</td><td>NAGS number</td></tr>
+                  <tr><td className="py-1 pr-4 font-mono">oem_number</td><td>No</td><td>OEM number</td></tr>
+                  <tr><td className="py-1 pr-4 font-mono">part_type</td><td>Yes</td><td>Windshield, Front Door Glass, etc.</td></tr>
+                  <tr><td className="py-1 pr-4 font-mono">year_start</td><td>Yes</td><td>Starting year (e.g., 2018)</td></tr>
+                  <tr><td className="py-1 pr-4 font-mono">year_end</td><td>Yes</td><td>Ending year (e.g., 2023)</td></tr>
+                  <tr><td className="py-1 pr-4 font-mono">make</td><td>Yes</td><td>Vehicle make (e.g., Toyota)</td></tr>
+                  <tr><td className="py-1 pr-4 font-mono">model</td><td>Yes</td><td>Vehicle model (e.g., Camry)</td></tr>
+                  <tr><td className="py-1 pr-4 font-mono">price</td><td>No*</td><td>Price in dollars (leave empty if call_for_price)</td></tr>
+                  <tr><td className="py-1 pr-4 font-mono">call_for_price</td><td>No</td><td>true or false</td></tr>
+                  <tr><td className="py-1 pr-4 font-mono">quantity</td><td>Yes</td><td>Number in stock</td></tr>
+                  <tr><td className="py-1 pr-4 font-mono">condition</td><td>No</td><td>New, Used - Like New, Used - Good, Used - Fair</td></tr>
+                  <tr><td className="py-1 pr-4 font-mono">listing_type</td><td>No</td><td>for_sale or private (default: for_sale)</td></tr>
+                  <tr><td className="py-1 pr-4 font-mono">description</td><td>No</td><td>Additional details</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </details>
+        </div>
+
+        <div className="p-6 border-t border-slate-200 flex gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 h-12 border border-slate-200 text-slate-700 rounded-sm font-medium hover:bg-slate-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleUpload}
+            disabled={uploading || parsedData.length === 0}
+            className="flex-1 h-12 bg-blue-600 text-white rounded-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+            data-testid="bulk-upload-submit"
+          >
+            {uploading ? "Uploading..." : `Upload ${parsedData.length} Parts`}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Footer Component
 const Footer = () => {
   return (
