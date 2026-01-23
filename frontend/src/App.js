@@ -1842,6 +1842,263 @@ const FindInstallers = () => {
   );
 };
 
+// Share Inventory Card Component
+const ShareInventoryCard = ({ token }) => {
+  const [shareCode, setShareCode] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    fetchShareLink();
+  }, []);
+
+  const fetchShareLink = async () => {
+    try {
+      const res = await axios.get(`${API}/inventory/share`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setShareCode(res.data.share_code);
+    } catch (error) {
+      console.error("Error fetching share link:", error);
+    }
+    setLoading(false);
+  };
+
+  const createShareLink = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.post(`${API}/inventory/share`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setShareCode(res.data.share_code);
+    } catch (error) {
+      console.error("Error creating share link:", error);
+    }
+    setLoading(false);
+  };
+
+  const deleteShareLink = async () => {
+    if (!window.confirm("Are you sure you want to disable sharing?")) return;
+    setLoading(true);
+    try {
+      await axios.delete(`${API}/inventory/share`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setShareCode(null);
+    } catch (error) {
+      console.error("Error deleting share link:", error);
+    }
+    setLoading(false);
+  };
+
+  const copyLink = () => {
+    const link = `${window.location.origin}/shared/${shareCode}`;
+    navigator.clipboard.writeText(link);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="bg-white p-6 border border-slate-200 rounded-sm">
+      <p className="text-sm text-slate-500 mb-2">Share Inventory</p>
+      {loading ? (
+        <div className="animate-pulse h-8 bg-slate-100 rounded"></div>
+      ) : shareCode ? (
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-green-600 text-sm font-medium">● Active</span>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={copyLink}
+              className="flex-1 text-xs bg-blue-600 text-white px-3 py-2 rounded-sm hover:bg-blue-700 transition-colors"
+              data-testid="copy-share-link"
+            >
+              {copied ? "Copied!" : "Copy Link"}
+            </button>
+            <button
+              onClick={deleteShareLink}
+              className="text-xs border border-slate-200 text-slate-600 px-3 py-2 rounded-sm hover:bg-slate-50 transition-colors"
+              data-testid="disable-share"
+            >
+              Disable
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={createShareLink}
+          className="w-full text-sm bg-slate-900 text-white px-4 py-2 rounded-sm hover:bg-slate-800 transition-colors"
+          data-testid="enable-share"
+        >
+          Enable Sharing
+        </button>
+      )}
+      <p className="text-xs text-slate-400 mt-2">Share your full inventory (including private items) with others</p>
+    </div>
+  );
+};
+
+// Shared Inventory Page Component
+const SharedInventory = () => {
+  const { shareCode } = useParams();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    fetchSharedInventory();
+  }, [shareCode]);
+
+  const fetchSharedInventory = async () => {
+    try {
+      const res = await axios.get(`${API}/inventory/shared/${shareCode}`);
+      setData(res.data);
+    } catch (error) {
+      setError(error.response?.data?.detail || "Invalid or expired share link");
+    }
+    setLoading(false);
+  };
+
+  const filteredParts = data?.parts?.filter(part => {
+    if (!searchTerm) return true;
+    const search = searchTerm.toLowerCase();
+    return (
+      part.part_number?.toLowerCase().includes(search) ||
+      part.part_type?.toLowerCase().includes(search) ||
+      part.make?.toLowerCase().includes(search) ||
+      part.model?.toLowerCase().includes(search) ||
+      part.nags_number?.toLowerCase().includes(search)
+    );
+  }) || [];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🔗</div>
+          <h1 className="font-heading text-2xl font-bold text-slate-900 mb-2">Link Not Found</h1>
+          <p className="text-slate-600">{error}</p>
+          <Link to="/" className="inline-block mt-4 text-blue-600 hover:underline">
+            Go to Homepage
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="py-8 px-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-8 rounded-sm mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <Store className="h-8 w-8 text-blue-400" />
+            <h1 className="font-heading text-3xl font-bold">{data.seller.business_name}</h1>
+          </div>
+          <p className="text-slate-300">
+            {data.seller.city}, {data.seller.state} • {data.seller.phone}
+          </p>
+          <p className="text-slate-400 mt-2">
+            Shared inventory • {data.total_parts} parts available
+          </p>
+        </div>
+
+        {/* Search */}
+        <div className="mb-6">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by part number, type, make, or model..."
+              className="w-full h-12 pl-12 pr-4 bg-white border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              data-testid="shared-search"
+            />
+          </div>
+        </div>
+
+        {/* Parts Grid */}
+        {filteredParts.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredParts.map(part => (
+              <div key={part.id} className="bg-white p-5 border border-slate-200 rounded-sm hover:shadow-lg transition-shadow">
+                {part.images && part.images.length > 0 ? (
+                  <img src={part.images[0]} alt="" className="w-full h-40 object-cover rounded-sm mb-4" />
+                ) : (
+                  <div className="w-full h-40 bg-slate-100 rounded-sm mb-4 flex items-center justify-center">
+                    <Car className="w-12 h-12 text-slate-300" />
+                  </div>
+                )}
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h3 className="font-heading font-bold text-slate-900">{part.part_type}</h3>
+                    <p className="text-sm text-slate-600">{part.year_start}-{part.year_end} {part.make} {part.model}</p>
+                  </div>
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    part.listing_type === "private" 
+                      ? "bg-slate-100 text-slate-600" 
+                      : "bg-green-100 text-green-700"
+                  }`}>
+                    {part.listing_type === "private" ? "Private" : "For Sale"}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 font-mono mb-3">
+                  {part.part_number}
+                  {part.nags_number && ` • OEM: ${part.nags_number}`}
+                </p>
+                <div className="flex justify-between items-center pt-3 border-t border-slate-100">
+                  <div>
+                    {part.call_for_price ? (
+                      <span className="text-amber-600 font-medium flex items-center gap-1">
+                        <Phone size={14} /> Call for Price
+                      </span>
+                    ) : (
+                      <span className="font-heading text-xl font-bold text-blue-600">${part.price}</span>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-slate-600">{part.quantity} in stock</p>
+                    <p className="text-xs text-slate-400">{part.condition}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12 bg-white rounded-sm border border-slate-200">
+            <Search className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-600">No parts found matching "{searchTerm}"</p>
+          </div>
+        )}
+
+        {/* Contact Seller */}
+        <div className="mt-8 bg-blue-50 p-6 rounded-sm border border-blue-200 text-center">
+          <p className="text-blue-900 font-medium mb-2">Interested in any parts?</p>
+          <p className="text-blue-700 text-sm mb-4">Contact {data.seller.business_name} directly</p>
+          <a
+            href={`tel:${data.seller.phone}`}
+            className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-sm font-medium hover:bg-blue-700 transition-colors"
+          >
+            <Phone size={18} />
+            Call {data.seller.phone}
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Seller Dashboard Component
 const SellerDashboard = () => {
   const { user, token } = useAuth();
