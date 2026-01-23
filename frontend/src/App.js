@@ -197,6 +197,36 @@ const Home = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Common part number prefixes and their meanings
+  const partNumberHints = [
+    { prefix: "FW", meaning: "Windshield (Front Window)", examples: ["FW02", "FW03", "FW04"] },
+    { prefix: "DW", meaning: "Door Window", examples: ["DW01", "DW02", "DW03"] },
+    { prefix: "RW", meaning: "Rear Window", examples: ["RW01", "RW02"] },
+    { prefix: "QG", meaning: "Quarter Glass", examples: ["QG01", "QG02"] },
+    { prefix: "VG", meaning: "Vent Glass", examples: ["VG01", "VG02"] },
+    { prefix: "SR", meaning: "Sunroof Glass", examples: ["SR01", "SR02"] },
+    { prefix: "DB", meaning: "Door Glass - Back", examples: ["DB01", "DB02"] },
+    { prefix: "DF", meaning: "Door Glass - Front", examples: ["DF01", "DF02"] },
+  ];
+
+  // Sample NAGS numbers for suggestions
+  const sampleNAGS = [
+    { number: "FW02537", vehicle: "2018-2023 Toyota Camry", type: "Windshield" },
+    { number: "FW02845", vehicle: "2019-2024 Honda Accord", type: "Windshield" },
+    { number: "FW03125", vehicle: "2020-2024 Ford F-150", type: "Windshield" },
+    { number: "FW02998", vehicle: "2017-2022 Chevrolet Silverado", type: "Windshield" },
+    { number: "DW01456", vehicle: "2018-2023 Toyota Camry", type: "Front Door Glass" },
+    { number: "DW01789", vehicle: "2019-2024 Honda Civic", type: "Front Door Glass" },
+    { number: "RW02134", vehicle: "2020-2024 Ford Explorer", type: "Rear Window" },
+    { number: "RW01876", vehicle: "2018-2023 Nissan Altima", type: "Rear Window" },
+    { number: "QG00345", vehicle: "2019-2024 BMW 3 Series", type: "Quarter Glass" },
+    { number: "FW04521", vehicle: "2021-2024 Tesla Model 3", type: "Windshield" },
+    { number: "FW03876", vehicle: "2020-2024 Hyundai Sonata", type: "Windshield" },
+    { number: "DW02234", vehicle: "2018-2023 Mazda CX-5", type: "Door Glass" },
+  ];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -227,11 +257,69 @@ const Home = () => {
     }
   }, [make]);
 
+  // Smart suggestions based on input
+  useEffect(() => {
+    if (partNumber.length >= 1) {
+      const input = partNumber.toUpperCase();
+      let newSuggestions = [];
+
+      // Check if input starts with known prefix
+      const matchingHints = partNumberHints.filter(h => 
+        h.prefix.startsWith(input) || input.startsWith(h.prefix)
+      );
+
+      if (matchingHints.length > 0 && input.length <= 2) {
+        // Show what the prefix means
+        newSuggestions = matchingHints.map(h => ({
+          type: "hint",
+          prefix: h.prefix,
+          meaning: h.meaning,
+          examples: h.examples
+        }));
+      }
+
+      // Show matching NAGS numbers
+      const matchingNAGS = sampleNAGS.filter(n => 
+        n.number.toUpperCase().includes(input) ||
+        n.vehicle.toUpperCase().includes(input) ||
+        n.type.toUpperCase().includes(input)
+      ).slice(0, 5);
+
+      if (matchingNAGS.length > 0) {
+        newSuggestions = [
+          ...newSuggestions,
+          ...matchingNAGS.map(n => ({
+            type: "part",
+            number: n.number,
+            vehicle: n.vehicle,
+            partType: n.type
+          }))
+        ];
+      }
+
+      // If just numbers, suggest it might be OEM or interchange
+      if (/^\d+$/.test(input) && input.length >= 2) {
+        newSuggestions.unshift({
+          type: "info",
+          message: `Looking for OEM or interchange number "${input}"...`,
+          hint: "Try adding a prefix like FW, DW, or RW for NAGS numbers"
+        });
+      }
+
+      setSuggestions(newSuggestions);
+      setShowSuggestions(newSuggestions.length > 0);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  }, [partNumber]);
+
   const handlePartSearch = async (e) => {
     e.preventDefault();
     if (!partNumber.trim()) return;
     setLoading(true);
     setSearched(true);
+    setShowSuggestions(false);
     try {
       const res = await axios.post(`${API}/parts/search/number`, { part_number: partNumber });
       setSearchResults(res.data);
@@ -264,6 +352,15 @@ const Home = () => {
   const quickSearch = (type) => {
     setPartType(type);
     setSearchType("vehicle");
+  };
+
+  const selectSuggestion = (suggestion) => {
+    if (suggestion.type === "part") {
+      setPartNumber(suggestion.number);
+    } else if (suggestion.type === "hint") {
+      setPartNumber(suggestion.prefix);
+    }
+    setShowSuggestions(false);
   };
 
   return (
