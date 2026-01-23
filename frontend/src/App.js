@@ -2155,23 +2155,25 @@ const AddPartModal = ({ token, onClose, onSuccess, editingPart }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!formData.call_for_price && !formData.price) {
-      alert("Please enter a price or select 'Call for Price'");
-      return;
-    }
-    
     setLoading(true);
     
-    try {
-      const payload = {
-        ...formData,
-        year_start: parseInt(formData.year_start),
-        year_end: parseInt(formData.year_end),
-        price: formData.call_for_price ? null : parseFloat(formData.price),
-        quantity: parseInt(formData.quantity)
-      };
+    // Apply smart defaults
+    const currentYear = new Date().getFullYear();
+    const payload = {
+      ...formData,
+      part_number: formData.part_number || `PART-${Date.now()}`,
+      part_type: formData.part_type || "Windshield",
+      year_start: formData.year_start ? parseInt(formData.year_start) : currentYear,
+      year_end: formData.year_end ? parseInt(formData.year_end) : currentYear,
+      make: formData.make || "Universal",
+      model: formData.model || "All Models",
+      price: formData.call_for_price ? null : (formData.price ? parseFloat(formData.price) : null),
+      call_for_price: formData.call_for_price || (!formData.price),
+      quantity: formData.quantity ? parseInt(formData.quantity) : 1,
+      condition: formData.condition || "New"
+    };
 
+    try {
       if (editingPart) {
         await axios.put(`${API}/parts/${editingPart.id}`, payload, {
           headers: { Authorization: `Bearer ${token}` }
