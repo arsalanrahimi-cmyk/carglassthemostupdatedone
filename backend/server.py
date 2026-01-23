@@ -111,6 +111,23 @@ class PartCreate(BaseModel):
     quantity: int
     condition: str = "New"
     description: Optional[str] = None
+    listing_type: str = "for_sale"  # "for_sale" or "private"
+    
+class PartUpdate(BaseModel):
+    part_number: Optional[str] = None
+    nags_number: Optional[str] = None
+    oem_number: Optional[str] = None
+    interchange_number: Optional[str] = None
+    part_type: Optional[str] = None
+    year_start: Optional[int] = None
+    year_end: Optional[int] = None
+    make: Optional[str] = None
+    model: Optional[str] = None
+    price: Optional[float] = None
+    quantity: Optional[int] = None
+    condition: Optional[str] = None
+    description: Optional[str] = None
+    listing_type: Optional[str] = None
 
 class VehicleSearch(BaseModel):
     year: Optional[int] = None
