@@ -2419,7 +2419,6 @@ const AddPartModal = ({ token, onClose, onSuccess, editingPart }) => {
                 <option value="Used - Like New">Used - Like New</option>
                 <option value="Used - Good">Used - Good</option>
                 <option value="Used - Fair">Used - Fair</option>
-                <option value="Refurbished">Refurbished</option>
               </select>
             </div>
           </div>
