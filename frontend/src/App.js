@@ -421,21 +421,6 @@ const Home = () => {
                                 <p className="text-xs text-blue-600 mt-1">{suggestion.hint}</p>
                               </div>
                             )}
-                            {suggestion.type === "hint" && (
-                              <button
-                                type="button"
-                                onClick={() => selectSuggestion(suggestion)}
-                                className="w-full px-4 py-3 text-left hover:bg-slate-50 border-b border-slate-100 transition-colors"
-                              >
-                                <div className="flex items-center gap-3">
-                                  <span className="bg-slate-900 text-white px-2 py-1 rounded text-sm font-mono font-bold">{suggestion.prefix}</span>
-                                  <div>
-                                    <p className="text-slate-900 font-medium">{suggestion.meaning}</p>
-                                    <p className="text-xs text-slate-500">Examples: {suggestion.examples.join(", ")}</p>
-                                  </div>
-                                </div>
-                              </button>
-                            )}
                             {suggestion.type === "part" && (
                               <button
                                 type="button"
@@ -454,7 +439,7 @@ const Home = () => {
                           </div>
                         ))}
                         <div className="px-4 py-2 bg-slate-50 text-xs text-slate-500">
-                          Type prefix (FW, DW, RW) or any part of the number to search
+                          Type part number with or without prefix to search
                         </div>
                       </div>
                     )}
