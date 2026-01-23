@@ -98,6 +98,7 @@ class InstallerCreate(BaseModel):
     website: Optional[str] = None
     description: Optional[str] = None
     certifications: Optional[str] = None
+    work_images: List[str] = []  # Base64 encoded images of work, up to 5
 
 class ReviewCreate(BaseModel):
     installer_id: str
