@@ -471,25 +471,9 @@ const Home = () => {
                 </div>
                 
                 {/* Part Number Guide */}
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <span className="text-slate-400 text-xs">Common prefixes:</span>
-                  {[
-                    { code: "FW", label: "Windshield" },
-                    { code: "DW", label: "Door" },
-                    { code: "RW", label: "Rear" },
-                    { code: "QG", label: "Quarter" }
-                  ].map(item => (
-                    <button
-                      key={item.code}
-                      type="button"
-                      onClick={() => setPartNumber(item.code)}
-                      className="text-xs bg-white/20 hover:bg-white/30 text-white px-2 py-1 rounded transition-colors"
-                    >
-                      <span className="font-mono font-bold">{item.code}</span>
-                      <span className="ml-1 opacity-70">= {item.label}</span>
-                    </button>
-                  ))}
-                </div>
+                <p className="text-xs text-slate-400 mt-3">
+                  Enter any part number - we'll find matches with or without prefixes
+                </p>
               </form>
             ) : (
               <form onSubmit={handleVehicleSearch} className="grid grid-cols-1 md:grid-cols-5 gap-4">
