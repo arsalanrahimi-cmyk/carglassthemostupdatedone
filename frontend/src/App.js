@@ -1849,6 +1849,7 @@ const SellerDashboard = () => {
   const [parts, setParts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false);
   const [toast, setToast] = useState(null);
   const [editingPart, setEditingPart] = useState(null);
 
@@ -1885,6 +1886,12 @@ const SellerDashboard = () => {
     }
   };
 
+  const handleBulkSuccess = (count) => {
+    setShowBulkModal(false);
+    setToast({ message: `Successfully uploaded ${count} parts!`, type: "success" });
+    fetchParts();
+  };
+
   const forSaleParts = parts.filter(p => p.listing_type !== "private");
   const privateParts = parts.filter(p => p.listing_type === "private");
 
@@ -1901,6 +1908,13 @@ const SellerDashboard = () => {
           editingPart={editingPart}
         />
       )}
+      {showBulkModal && (
+        <BulkUploadModal
+          token={token}
+          onClose={() => setShowBulkModal(false)}
+          onSuccess={handleBulkSuccess}
+        />
+      )}
 
       <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -1909,14 +1923,26 @@ const SellerDashboard = () => {
             <h1 className="font-heading text-3xl font-bold text-slate-900">Seller Dashboard</h1>
             <p className="text-slate-600 mt-1">Welcome back, {user.name}! Manage your inventory here.</p>
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-sm font-medium hover:bg-blue-700 transition-colors"
-            data-testid="add-part-btn"
-          >
-            <span className="text-xl">+</span>
-            Add New Part
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowBulkModal(true)}
+              className="inline-flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-3 rounded-sm font-medium hover:bg-slate-50 transition-colors"
+              data-testid="bulk-upload-btn"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              Bulk Upload
+            </button>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-sm font-medium hover:bg-blue-700 transition-colors"
+              data-testid="add-part-btn"
+            >
+              <span className="text-xl">+</span>
+              Add New Part
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
