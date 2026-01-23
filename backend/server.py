@@ -360,6 +360,41 @@ async def get_installer(installer_id: str):
         raise HTTPException(status_code=404, detail="Installer not found")
     return installer
 
+# ==================== REVIEW ROUTES ====================
+
+@api_router.post("/reviews", response_model=dict)
+async def create_review(review: ReviewCreate):
+    # Check if installer exists
+    installer = await db.installers.find_one({"id": review.installer_id})
+    if not installer:
+        raise HTTPException(status_code=404, detail="Installer not found")
+    
+    review_doc = {
+        "id": str(uuid.uuid4()),
+        "installer_id": review.installer_id,
+        "rating": review.rating,
+        "reviewer_name": review.reviewer_name,
+        "reviewer_email": review.reviewer_email,
+        "comment": review.comment,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.reviews.insert_one(review_doc)
+    
+    # Update installer's average rating
+    all_reviews = await db.reviews.find({"installer_id": review.installer_id}, {"_id": 0}).to_list(1000)
+    avg_rating = sum(r["rating"] for r in all_reviews) / len(all_reviews)
+    await db.installers.update_one(
+        {"id": review.installer_id},
+        {"$set": {"rating": round(avg_rating, 1), "review_count": len(all_reviews)}}
+    )
+    
+    return {"success": True, "message": "Review submitted successfully!", "review_id": review_doc["id"]}
+
+@api_router.get("/reviews/{installer_id}", response_model=List[dict])
+async def get_installer_reviews(installer_id: str):
+    reviews = await db.reviews.find({"installer_id": installer_id}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return reviews
+
 # ==================== CONTACT ROUTES ====================
 
 @api_router.post("/contact", response_model=dict)
