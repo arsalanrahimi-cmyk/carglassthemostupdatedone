@@ -418,6 +418,76 @@ async def get_installer_reviews(installer_id: str):
     reviews = await db.reviews.find({"installer_id": installer_id}, {"_id": 0}).sort("created_at", -1).to_list(100)
     return reviews
 
+# ==================== SHAREABLE INVENTORY ROUTES ====================
+
+@api_router.post("/inventory/share", response_model=dict)
+async def create_share_link(current_user: dict = Depends(get_current_user)):
+    if current_user["user_type"] != "seller":
+        raise HTTPException(status_code=403, detail="Only sellers can create share links")
+    
+    # Check if seller already has a share link
+    existing = await db.share_links.find_one({"seller_id": current_user.get("seller_id")}, {"_id": 0})
+    if existing:
+        return {"share_code": existing["share_code"], "created_at": existing["created_at"]}
+    
+    # Generate unique share code
+    share_code = secrets.token_urlsafe(8)
+    
+    share_doc = {
+        "id": str(uuid.uuid4()),
+        "seller_id": current_user.get("seller_id"),
+        "share_code": share_code,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "is_active": True
+    }
+    await db.share_links.insert_one(share_doc)
+    
+    return {"share_code": share_code, "created_at": share_doc["created_at"]}
+
+@api_router.delete("/inventory/share", response_model=dict)
+async def delete_share_link(current_user: dict = Depends(get_current_user)):
+    if current_user["user_type"] != "seller":
+        raise HTTPException(status_code=403, detail="Only sellers can delete share links")
+    
+    await db.share_links.delete_one({"seller_id": current_user.get("seller_id")})
+    return {"success": True, "message": "Share link deleted"}
+
+@api_router.get("/inventory/share", response_model=dict)
+async def get_share_link(current_user: dict = Depends(get_current_user)):
+    if current_user["user_type"] != "seller":
+        raise HTTPException(status_code=403, detail="Only sellers can view share links")
+    
+    share = await db.share_links.find_one({"seller_id": current_user.get("seller_id")}, {"_id": 0})
+    if not share:
+        return {"share_code": None}
+    return {"share_code": share["share_code"], "created_at": share["created_at"]}
+
+@api_router.get("/inventory/shared/{share_code}", response_model=dict)
+async def get_shared_inventory(share_code: str):
+    # Find the share link
+    share = await db.share_links.find_one({"share_code": share_code, "is_active": True}, {"_id": 0})
+    if not share:
+        raise HTTPException(status_code=404, detail="Invalid or expired share link")
+    
+    # Get seller info
+    seller = await db.sellers.find_one({"id": share["seller_id"]}, {"_id": 0})
+    if not seller:
+        raise HTTPException(status_code=404, detail="Seller not found")
+    
+    # Get all parts (including private) for this seller
+    parts = await db.parts.find({"seller_id": share["seller_id"]}, {"_id": 0}).to_list(1000)
+    
+    return {
+        "seller": {
+            "business_name": seller.get("business_name"),
+            "city": seller.get("city"),
+            "state": seller.get("state"),
+            "phone": seller.get("phone")
+        },
+        "parts": parts,
+        "total_parts": len(parts)
+    }
+
 # ==================== CONTACT ROUTES ====================
 
 @api_router.post("/contact", response_model=dict)
