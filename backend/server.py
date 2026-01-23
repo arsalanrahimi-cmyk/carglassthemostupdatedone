@@ -584,14 +584,18 @@ async def get_years():
 @api_router.get("/vehicles/makes", response_model=List[str])
 async def get_makes():
     makes = [
-        "Acura", "Alfa Romeo", "Aston Martin", "Audi", "Bentley", "BMW", "Buick",
-        "Cadillac", "Chevrolet", "Chrysler", "Dodge", "Ferrari", "Fiat", "Ford",
-        "Genesis", "GMC", "Honda", "Hyundai", "Infiniti", "Jaguar", "Jeep", "Kia",
-        "Lamborghini", "Land Rover", "Lexus", "Lincoln", "Maserati", "Mazda",
-        "McLaren", "Mercedes-Benz", "Mini", "Mitsubishi", "Nissan", "Porsche",
-        "Ram", "Rolls-Royce", "Subaru", "Tesla", "Toyota", "Volkswagen", "Volvo"
+        "Acura", "Alfa Romeo", "AMC", "Aston Martin", "Audi", "Austin", "Bentley", "BMW", "Buick",
+        "Cadillac", "Chevrolet", "Chrysler", "Citroën", "Daewoo", "Daihatsu", "Datsun", "DeLorean",
+        "Dodge", "Eagle", "Ferrari", "Fiat", "Fisker", "Ford", "Freightliner", "Genesis", "Geo",
+        "GMC", "Honda", "Hummer", "Hyundai", "Infiniti", "International", "Isuzu", "Jaguar", "Jeep",
+        "Kia", "Lamborghini", "Lancia", "Land Rover", "Lexus", "Lincoln", "Lotus", "Lucid",
+        "Maserati", "Maybach", "Mazda", "McLaren", "Mercedes-Benz", "Mercury", "Mini", "Mitsubishi",
+        "Nash", "Nissan", "Oldsmobile", "Opel", "Packard", "Peugeot", "Plymouth", "Polestar",
+        "Pontiac", "Porsche", "Ram", "Renault", "Rivian", "Rolls-Royce", "Saab", "Saturn", "Scion",
+        "Smart", "Studebaker", "Subaru", "Suzuki", "Tesla", "Toyota", "Triumph", "Volkswagen",
+        "Volvo", "Willys"
     ]
-    return makes
+    return sorted(makes)
 
 @api_router.get("/vehicles/models/{make}", response_model=List[str])
 async def get_models(make: str):
