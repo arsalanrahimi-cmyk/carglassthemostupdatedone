@@ -268,50 +268,38 @@ const Home = () => {
 
   // Smart suggestions based on input
   useEffect(() => {
-    if (partNumber.length >= 1) {
-      const input = partNumber.toUpperCase();
+    if (partNumber.length >= 2) {
+      const input = partNumber.toUpperCase().replace(/^0+/, ''); // Remove leading zeros
       let newSuggestions = [];
 
-      // Check if input starts with known prefix
-      const matchingHints = partNumberHints.filter(h => 
-        h.prefix.startsWith(input) || input.startsWith(h.prefix)
-      );
+      // Sample NAGS numbers for suggestions - search more flexibly
+      const matchingNAGS = sampleNAGS.filter(n => {
+        const numOnly = n.number.replace(/[^0-9]/g, ''); // Get just the numbers
+        const inputNumOnly = input.replace(/[^0-9]/g, ''); // Get just numbers from input
+        
+        return (
+          n.number.toUpperCase().includes(input) ||
+          numOnly.includes(inputNumOnly) || // Match numbers only
+          n.vehicle.toUpperCase().includes(input) ||
+          n.type.toUpperCase().includes(input)
+        );
+      }).slice(0, 6);
 
-      if (matchingHints.length > 0 && input.length <= 2) {
-        // Show what the prefix means
-        newSuggestions = matchingHints.map(h => ({
-          type: "hint",
-          prefix: h.prefix,
-          meaning: h.meaning,
-          examples: h.examples
+      if (matchingNAGS.length > 0) {
+        newSuggestions = matchingNAGS.map(n => ({
+          type: "part",
+          number: n.number,
+          vehicle: n.vehicle,
+          partType: n.type
         }));
       }
 
-      // Show matching NAGS numbers
-      const matchingNAGS = sampleNAGS.filter(n => 
-        n.number.toUpperCase().includes(input) ||
-        n.vehicle.toUpperCase().includes(input) ||
-        n.type.toUpperCase().includes(input)
-      ).slice(0, 5);
-
-      if (matchingNAGS.length > 0) {
-        newSuggestions = [
-          ...newSuggestions,
-          ...matchingNAGS.map(n => ({
-            type: "part",
-            number: n.number,
-            vehicle: n.vehicle,
-            partType: n.type
-          }))
-        ];
-      }
-
-      // If just numbers, suggest it might be OEM or interchange
-      if (/^\d+$/.test(input) && input.length >= 2) {
+      // If searching with just numbers, show helpful message
+      if (/^\d+$/.test(input) || /^0\d+$/.test(partNumber)) {
         newSuggestions.unshift({
           type: "info",
-          message: `Looking for OEM or interchange number "${input}"...`,
-          hint: "Try adding a prefix like FW, DW, or RW for NAGS numbers"
+          message: `Searching for "${partNumber}"...`,
+          hint: "We'll find matches with or without prefixes (FW, DW, RW, etc.)"
         });
       }
 
