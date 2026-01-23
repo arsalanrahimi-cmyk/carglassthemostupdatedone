@@ -3473,6 +3473,8 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/account-settings" element={<AccountSettings />} />
               <Route path="/sell" element={<SellerRegister />} />
               <Route path="/installer-register" element={<InstallerRegister />} />
               <Route path="/contact" element={<Contact />} />
