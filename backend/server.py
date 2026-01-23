@@ -666,7 +666,15 @@ async def get_part_types():
         "Vent Glass - Driver",
         "Vent Glass - Passenger",
         "Sunroof Glass",
-        "Moonroof Glass"
+        "Moonroof Glass",
+        "Window Regulator - Front Driver",
+        "Window Regulator - Front Passenger",
+        "Window Regulator - Rear Driver",
+        "Window Regulator - Rear Passenger",
+        "Window Motor - Front Driver",
+        "Window Motor - Front Passenger",
+        "Window Motor - Rear Driver",
+        "Window Motor - Rear Passenger"
     ]
 
 # ==================== HEALTH CHECK ====================
