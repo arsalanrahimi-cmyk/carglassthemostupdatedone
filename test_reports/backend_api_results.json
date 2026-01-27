@@ -1,0 +1,123 @@
+{
+  "summary": {
+    "total_tests": 16,
+    "passed_tests": 14,
+    "failed_tests": 2,
+    "success_rate": 87.5,
+    "test_timestamp": "2026-01-27T17:29:07.872855"
+  },
+  "test_results": [
+    {
+      "test_name": "Health Check",
+      "endpoint": "",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T17:29:07.144753"
+    },
+    {
+      "test_name": "User Registration",
+      "endpoint": "auth/register",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T17:29:07.223146"
+    },
+    {
+      "test_name": "User Login",
+      "endpoint": "auth/login",
+      "success": false,
+      "details": "Expected 200, got 401 - Invalid email or password",
+      "timestamp": "2026-01-27T17:29:07.262313"
+    },
+    {
+      "test_name": "Seller Registration",
+      "endpoint": "sellers/register",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T17:29:07.317612"
+    },
+    {
+      "test_name": "Installer Registration",
+      "endpoint": "installers/register",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T17:29:07.408582"
+    },
+    {
+      "test_name": "Forgot Password Request",
+      "endpoint": "auth/forgot-password",
+      "success": false,
+      "details": "Expected 200, got 422 - [{'type': 'missing', 'loc': ['query', 'email'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.12/v/missing'}]",
+      "timestamp": "2026-01-27T17:29:07.448059"
+    },
+    {
+      "test_name": "Forgot Password Request",
+      "endpoint": "auth/forgot-password",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T17:29:07.494968"
+    },
+    {
+      "test_name": "Part Search by Number",
+      "endpoint": "parts/search/number",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T17:29:07.530380"
+    },
+    {
+      "test_name": "Part Search by Vehicle",
+      "endpoint": "parts/search/vehicle",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T17:29:07.572176"
+    },
+    {
+      "test_name": "Contact Form Submission",
+      "endpoint": "contact",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T17:29:07.654620"
+    },
+    {
+      "test_name": "Get Installers List",
+      "endpoint": "installers",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T17:29:07.691897"
+    },
+    {
+      "test_name": "Browse Parts",
+      "endpoint": "parts",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T17:29:07.729348"
+    },
+    {
+      "test_name": "Get Vehicle Years",
+      "endpoint": "vehicles/years",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T17:29:07.766648"
+    },
+    {
+      "test_name": "Get Vehicle Makes",
+      "endpoint": "vehicles/makes",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T17:29:07.800741"
+    },
+    {
+      "test_name": "Get Toyota Models",
+      "endpoint": "vehicles/models/Toyota",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T17:29:07.835931"
+    },
+    {
+      "test_name": "Get Part Types",
+      "endpoint": "vehicles/part-types",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T17:29:07.872148"
+    }
+  ]
+}
