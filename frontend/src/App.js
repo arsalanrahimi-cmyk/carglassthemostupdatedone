@@ -1391,6 +1391,24 @@ const AddProductModal = ({ onClose, onSuccess, token, setToast }) => {
               />
             </div>
 
+            {/* Part Location - Private (Only visible to business owner) */}
+            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+              <div className="flex items-center gap-2 mb-2">
+                <MapPin size={16} className="text-slate-500" />
+                <label className="block text-sm font-semibold text-slate-700">Part Location</label>
+                <span className="text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">Private - Only you can see this</span>
+              </div>
+              <input 
+                type="text" 
+                value={formData.location} 
+                onChange={(e) => setFormData({...formData, location: e.target.value})}
+                placeholder="e.g., Warehouse A, Shelf B3, Bin 12"
+                className="w-full h-10 px-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                data-testid="part-location-input"
+              />
+              <p className="text-xs text-slate-500 mt-1">This helps you find the part in your inventory. Not shown to buyers.</p>
+            </div>
+
             {/* Image Upload */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Product Images (up to 3)</label>
