@@ -628,7 +628,6 @@ async def bulk_upload_products(file: UploadFile = File(...), current_user: dict 
         "errors": errors[:10],
         "message": f"Successfully uploaded {created_count} products!"
     }
-    }
 
 @api_router.get("/products/template")
 async def get_csv_template():
