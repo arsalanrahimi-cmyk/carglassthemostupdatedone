@@ -1077,11 +1077,12 @@ const Dashboard = () => {
               <table className="w-full">
                 <thead className="bg-slate-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Part #</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Category</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">NAGS #</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">OEM #</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Vehicle</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Qty</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Price</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Location</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Visibility</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Actions</th>
                   </tr>
@@ -1089,11 +1090,12 @@ const Dashboard = () => {
                 <tbody className="divide-y divide-slate-100">
                   {products.map(product => (
                     <tr key={product.id} className="hover:bg-slate-50">
-                      <td className="px-4 py-3 text-sm font-mono">{product.part_number}</td>
-                      <td className="px-4 py-3 text-sm capitalize">{product.category?.replace('_', ' ')}</td>
-                      <td className="px-4 py-3 text-sm">{product.year_start}-{product.year_end} {product.make} {product.model}</td>
+                      <td className="px-4 py-3 text-sm font-mono">{product.nags_number}</td>
+                      <td className="px-4 py-3 text-sm font-mono">{product.oem_number}</td>
+                      <td className="px-4 py-3 text-sm">{product.year_start && product.year_end ? `${product.year_start}-${product.year_end}` : ''} {product.make} {product.model}</td>
                       <td className="px-4 py-3 text-sm">{product.quantity}</td>
-                      <td className="px-4 py-3 text-sm">{product.call_for_price ? "Call" : `$${product.price}`}</td>
+                      <td className="px-4 py-3 text-sm">{product.call_for_price ? "Call" : product.price ? `$${product.price}` : '-'}</td>
+                      <td className="px-4 py-3 text-sm text-slate-500">{product.location || '-'}</td>
                       <td className="px-4 py-3">
                         <button onClick={() => toggleVisibility(product)} className={`flex items-center gap-1 text-sm px-2 py-1 rounded ${product.listing_type === "public" ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600"}`}>
                           {product.listing_type === "public" ? <Eye size={14} /> : <EyeOff size={14} />}
