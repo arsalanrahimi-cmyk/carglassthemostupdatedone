@@ -632,38 +632,48 @@ async def bulk_upload_products(file: UploadFile = File(...), current_user: dict 
 
 @api_router.get("/products/template")
 async def get_csv_template():
-    """Download CSV template for bulk upload"""
+    """Download CSV template for bulk upload - all fields optional!"""
     from fastapi.responses import StreamingResponse
     
-    # Create CSV content
-    csv_content = """nags_number,oem_number,part_number,category,year_start,year_end,make,model,condition,price,call_for_price,quantity,location,description,listing_type
-FW02537,43R-001025,INT-001,windshield,2020,2024,Toyota,Camry,New,150.00,false,5,Warehouse A - Shelf B3,Front windshield with rain sensor,public
-DW01456,43R-002030,,door_glass,2018,2022,Honda,Accord,Used,75.00,false,3,Warehouse B - Bin 12,Driver side door glass,public
-BG03789,43R-003045,,back_glass,2019,2023,Ford,F-150,OEM,,true,2,Storage Unit 5,Heated back glass,public"""
+    # Create simple, friendly CSV content
+    csv_content = """nags_number,oem_number,part_number,make,model,year,category,condition,price,quantity,location,description
+FW02537,43R-001025,,Toyota,Camry,2020,windshield,New,150.00,5,Warehouse A,Front windshield
+DW01456,43R-002030,,Honda,Accord,2022,door_glass,Used,75.00,3,Shelf B2,Driver side
+,,,Ford,F-150,2021,back_glass,OEM,,2,Storage 5,Call for price
+ABC123,,,,,,,New,50,10,,Generic part"""
     
     # Return as downloadable CSV file
     return StreamingResponse(
         iter([csv_content]),
         media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=carglasshub_bulk_upload_template.csv"}
+        headers={"Content-Disposition": "attachment; filename=carglasshub_inventory_template.csv"}
     )
 
 @api_router.get("/products/template-info")
 async def get_csv_template_info():
     """Get CSV template column information"""
     return {
-        "required_columns": ["nags_number", "oem_number"],
-        "optional_columns": [
-            "part_number", "category", "year_start", "year_end", "make", "model",
-            "condition", "price", "call_for_price", "quantity", "location", "description", "listing_type"
-        ],
-        "categories": [
-            "windshield", "door_glass", "quarter_glass", "vent_glass",
-            "roof_glass", "back_glass", "window_regulator", "side_mirror"
-        ],
-        "conditions": ["New", "Used", "OEM", "Aftermarket"],
-        "listing_types": ["public", "private"],
-        "note": "Location field is private - only visible to business owner, not shown in public search"
+        "message": "ALL FIELDS ARE OPTIONAL! Just fill in what you have.",
+        "columns": {
+            "nags_number": "NAGS part number (optional)",
+            "oem_number": "OEM part number (optional)", 
+            "part_number": "Your internal part number (optional)",
+            "make": "Vehicle make - Toyota, Honda, Ford, etc.",
+            "model": "Vehicle model - Camry, Accord, F-150, etc.",
+            "year": "Vehicle year (or use year_start and year_end for ranges)",
+            "category": "windshield, door_glass, back_glass, quarter_glass, etc.",
+            "condition": "New, Used, OEM, Aftermarket",
+            "price": "Price in dollars (leave empty for 'Call for Price')",
+            "quantity": "Number in stock (defaults to 1)",
+            "location": "Where you store it (private - only you see this)",
+            "description": "Any notes about the part"
+        },
+        "tips": [
+            "You can use just ONE column if that's all you have",
+            "Empty rows are automatically skipped",
+            "Price can include $ sign - we'll handle it",
+            "Column names are flexible: 'Make' or 'make' both work"
+        ]
     }
 
 @api_router.get("/products/my-inventory", response_model=List[dict])
