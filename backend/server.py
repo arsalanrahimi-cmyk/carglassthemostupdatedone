@@ -923,6 +923,193 @@ async def get_categories():
         {"id": "side_mirror", "name": "Side Mirror"}
     ]
 
+# ==================== MESSAGING ROUTES ====================
+
+@api_router.post("/messages", response_model=dict)
+async def send_message(msg: MessageCreate, current_user: dict = Depends(get_current_user)):
+    """Send a message to a business/seller"""
+    # Get recipient info
+    recipient = await db.users.find_one({"id": msg.recipient_id}, {"_id": 0})
+    if not recipient:
+        # Try finding by business_id
+        business = await db.businesses.find_one({"id": msg.recipient_id}, {"_id": 0})
+        if business:
+            recipient = await db.users.find_one({"business_id": msg.recipient_id}, {"_id": 0})
+    
+    if not recipient:
+        raise HTTPException(status_code=404, detail="Recipient not found")
+    
+    # Get sender info
+    sender_name = current_user.get("name", "Unknown")
+    sender_business = None
+    if current_user.get("business_id"):
+        sender_business = await db.businesses.find_one({"id": current_user["business_id"]}, {"_id": 0, "business_name": 1})
+    
+    message_doc = {
+        "id": str(uuid.uuid4()),
+        "conversation_id": str(uuid.uuid4()),
+        "sender_id": current_user["id"],
+        "sender_name": sender_name,
+        "sender_email": current_user.get("email"),
+        "sender_business": sender_business.get("business_name") if sender_business else None,
+        "recipient_id": recipient["id"],
+        "recipient_name": recipient.get("name"),
+        "product_id": msg.product_id,
+        "subject": msg.subject,
+        "message": msg.message,
+        "is_read": False,
+        "status": "active",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Get product info if provided
+    if msg.product_id:
+        product = await db.products.find_one({"id": msg.product_id}, {"_id": 0, "nags_number": 1, "oem_number": 1, "make": 1, "model": 1})
+        if product:
+            message_doc["product_info"] = product
+    
+    await db.messages.insert_one(message_doc)
+    return {"success": True, "message_id": message_doc["id"], "message": "Message sent successfully"}
+
+@api_router.get("/messages/inbox", response_model=List[dict])
+async def get_inbox(current_user: dict = Depends(get_current_user)):
+    """Get messages received by the current user"""
+    messages = await db.messages.find(
+        {"recipient_id": current_user["id"], "status": "active"},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    return messages
+
+@api_router.get("/messages/sent", response_model=List[dict])
+async def get_sent_messages(current_user: dict = Depends(get_current_user)):
+    """Get messages sent by the current user"""
+    messages = await db.messages.find(
+        {"sender_id": current_user["id"], "status": "active"},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    return messages
+
+@api_router.get("/messages/unread-count", response_model=dict)
+async def get_unread_count(current_user: dict = Depends(get_current_user)):
+    """Get count of unread messages"""
+    count = await db.messages.count_documents({"recipient_id": current_user["id"], "is_read": False, "status": "active"})
+    return {"unread_count": count}
+
+@api_router.put("/messages/{message_id}/read", response_model=dict)
+async def mark_message_read(message_id: str, current_user: dict = Depends(get_current_user)):
+    """Mark a message as read"""
+    result = await db.messages.update_one(
+        {"id": message_id, "recipient_id": current_user["id"]},
+        {"$set": {"is_read": True}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Message not found")
+    return {"success": True}
+
+@api_router.post("/messages/{message_id}/reply", response_model=dict)
+async def reply_to_message(message_id: str, reply: MessageReply, current_user: dict = Depends(get_current_user)):
+    """Reply to a message"""
+    original = await db.messages.find_one({"id": message_id}, {"_id": 0})
+    if not original:
+        raise HTTPException(status_code=404, detail="Message not found")
+    
+    # Determine recipient (swap sender/recipient)
+    if original["sender_id"] == current_user["id"]:
+        recipient_id = original["recipient_id"]
+        recipient_name = original["recipient_name"]
+    else:
+        recipient_id = original["sender_id"]
+        recipient_name = original["sender_name"]
+    
+    sender_name = current_user.get("name", "Unknown")
+    sender_business = None
+    if current_user.get("business_id"):
+        sender_business = await db.businesses.find_one({"id": current_user["business_id"]}, {"_id": 0, "business_name": 1})
+    
+    reply_doc = {
+        "id": str(uuid.uuid4()),
+        "conversation_id": original.get("conversation_id", original["id"]),
+        "parent_id": message_id,
+        "sender_id": current_user["id"],
+        "sender_name": sender_name,
+        "sender_email": current_user.get("email"),
+        "sender_business": sender_business.get("business_name") if sender_business else None,
+        "recipient_id": recipient_id,
+        "recipient_name": recipient_name,
+        "product_id": original.get("product_id"),
+        "product_info": original.get("product_info"),
+        "subject": f"Re: {original['subject']}",
+        "message": reply.message,
+        "is_read": False,
+        "status": "active",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.messages.insert_one(reply_doc)
+    return {"success": True, "message_id": reply_doc["id"]}
+
+@api_router.delete("/messages/{message_id}", response_model=dict)
+async def delete_message(message_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete (archive) a message"""
+    result = await db.messages.update_one(
+        {"id": message_id, "$or": [{"sender_id": current_user["id"]}, {"recipient_id": current_user["id"]}]},
+        {"$set": {"status": "deleted"}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Message not found")
+    return {"success": True}
+
+# ==================== ADMIN MESSAGE ROUTES ====================
+
+@api_router.get("/admin/messages", response_model=List[dict])
+async def admin_get_all_messages(admin: dict = Depends(require_admin)):
+    """Get all messages (admin only)"""
+    messages = await db.messages.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return messages
+
+@api_router.delete("/admin/messages/{message_id}", response_model=dict)
+async def admin_delete_message(message_id: str, admin: dict = Depends(require_admin)):
+    """Permanently delete a message (admin only)"""
+    result = await db.messages.delete_one({"id": message_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Message not found")
+    return {"success": True}
+
+@api_router.put("/admin/contacts/{contact_id}/status", response_model=dict)
+async def admin_update_contact_status(contact_id: str, status: str, admin: dict = Depends(require_admin)):
+    """Update contact message status (new, read, resolved)"""
+    result = await db.contacts.update_one(
+        {"id": contact_id},
+        {"$set": {"status": status}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    return {"success": True}
+
+@api_router.delete("/admin/users/{user_id}", response_model=dict)
+async def admin_delete_user(user_id: str, admin: dict = Depends(require_admin)):
+    """Delete a user and their associated data (admin only)"""
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Delete associated business if exists
+    if user.get("business_id"):
+        await db.businesses.delete_one({"id": user["business_id"]})
+        await db.products.delete_many({"business_id": user["business_id"]})
+    
+    # Delete associated installer if exists
+    if user.get("installer_id"):
+        await db.installers.delete_one({"id": user["installer_id"]})
+    
+    # Delete user's messages
+    await db.messages.delete_many({"$or": [{"sender_id": user_id}, {"recipient_id": user_id}]})
+    
+    # Delete user
+    await db.users.delete_one({"id": user_id})
+    
+    return {"success": True, "message": "User and associated data deleted"}
+
 # ==================== HEALTH CHECK ====================
 
 @api_router.get("/")
