@@ -1131,7 +1131,7 @@ const AddProductModal = ({ onClose, onSuccess, token, setToast }) => {
     part_number: "", nags_number: "", oem_number: "", category: "",
     year_start: "", year_end: "", make: "", model: "",
     condition: "", price: "", call_for_price: false, quantity: 1,
-    listing_type: "public", description: "", images: []
+    listing_type: "public", description: "", location: "", images: []
   });
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
