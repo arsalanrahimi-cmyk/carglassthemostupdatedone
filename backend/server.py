@@ -861,6 +861,8 @@ async def admin_get_stats(admin: dict = Depends(require_admin)):
     products_count = await db.products.count_documents({})
     public_products = await db.products.count_documents({"listing_type": "public"})
     contacts_count = await db.contacts.count_documents({"status": "new"})
+    messages_count = await db.messages.count_documents({})
+    unread_messages = await db.messages.count_documents({"is_read": False})
     
     return {
         "total_users": users_count,
@@ -868,7 +870,9 @@ async def admin_get_stats(admin: dict = Depends(require_admin)):
         "total_installers": installers_count,
         "total_products": products_count,
         "public_listings": public_products,
-        "new_contacts": contacts_count
+        "new_contacts": contacts_count,
+        "total_messages": messages_count,
+        "unread_messages": unread_messages
     }
 
 # ==================== VEHICLE DATA ROUTES ====================
