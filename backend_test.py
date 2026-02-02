@@ -567,6 +567,10 @@ class CarGlassHubAPITester:
         self.test_add_product()
         self.test_get_inventory()
         
+        # Messaging system tests
+        self.test_messaging_system()
+        self.test_admin_messaging()
+        
         # Print summary
         print("\n" + "=" * 60)
         print(f"📊 Test Summary:")
