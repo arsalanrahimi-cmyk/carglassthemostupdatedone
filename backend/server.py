@@ -143,6 +143,16 @@ class ContactMessage(BaseModel):
     subject: str
     message: str
 
+# Message Models
+class MessageCreate(BaseModel):
+    recipient_id: str  # Business ID or User ID
+    product_id: Optional[str] = None
+    subject: str
+    message: str
+
+class MessageReply(BaseModel):
+    message: str
+
 # ==================== HELPER FUNCTIONS ====================
 
 def hash_password(password: str) -> str:
