@@ -944,14 +944,21 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("inventory");
   const [products, setProducts] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [sentMessages, setSentMessages] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showReplyModal, setShowReplyModal] = useState(null);
   const [stats, setStats] = useState(null);
+  const [allUsers, setAllUsers] = useState([]);
+  const [allMessages, setAllMessages] = useState([]);
+  const [contacts, setContacts] = useState([]);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    if (!user || !["business", "admin"].includes(user.user_type)) {
+    if (!user || !["business", "admin", "customer"].includes(user.user_type)) {
       navigate("/login");
       return;
     }
@@ -960,14 +967,34 @@ const Dashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [productsRes] = await Promise.all([
-        axios.get(`${API}/products/my-inventory`, { headers: { Authorization: `Bearer ${token}` } })
+      // Get messages for all user types
+      const [inboxRes, sentRes, unreadRes] = await Promise.all([
+        axios.get(`${API}/messages/inbox`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/messages/sent`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/messages/unread-count`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
-      setProducts(productsRes.data);
+      setMessages(inboxRes.data);
+      setSentMessages(sentRes.data);
+      setUnreadCount(unreadRes.data.unread_count);
+
+      // Get products for business users
+      if (user?.user_type === "business" || user?.user_type === "admin") {
+        const productsRes = await axios.get(`${API}/products/my-inventory`, { headers: { Authorization: `Bearer ${token}` } });
+        setProducts(productsRes.data);
+      }
       
+      // Admin data
       if (user?.user_type === "admin") {
-        const statsRes = await axios.get(`${API}/admin/stats`, { headers: { Authorization: `Bearer ${token}` } });
+        const [statsRes, usersRes, allMsgRes, contactsRes] = await Promise.all([
+          axios.get(`${API}/admin/stats`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API}/admin/users`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API}/admin/messages`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API}/admin/contacts`, { headers: { Authorization: `Bearer ${token}` } })
+        ]);
         setStats(statsRes.data);
+        setAllUsers(usersRes.data);
+        setAllMessages(allMsgRes.data);
+        setContacts(contactsRes.data);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -978,10 +1005,8 @@ const Dashboard = () => {
   const handleBulkUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
     const formData = new FormData();
     formData.append("file", file);
-    
     try {
       const res = await axios.post(`${API}/products/bulk`, formData, {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" }
@@ -1016,36 +1041,100 @@ const Dashboard = () => {
     }
   };
 
+  const markAsRead = async (msgId) => {
+    try {
+      await axios.put(`${API}/messages/${msgId}/read`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      fetchData();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const deleteMessage = async (msgId) => {
+    if (!window.confirm("Delete this message?")) return;
+    try {
+      await axios.delete(`${API}/messages/${msgId}`, { headers: { Authorization: `Bearer ${token}` } });
+      setToast({ message: "Message deleted", type: "success" });
+      fetchData();
+    } catch (error) {
+      setToast({ message: "Failed to delete", type: "error" });
+    }
+  };
+
+  const toggleUserStatus = async (userId, currentStatus) => {
+    try {
+      await axios.put(`${API}/admin/users/${userId}/status?is_active=${!currentStatus}`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      setToast({ message: `User ${!currentStatus ? 'activated' : 'deactivated'}`, type: "success" });
+      fetchData();
+    } catch (error) {
+      setToast({ message: "Failed to update user", type: "error" });
+    }
+  };
+
+  const deleteUser = async (userId) => {
+    if (!window.confirm("Delete this user and all their data? This cannot be undone.")) return;
+    try {
+      await axios.delete(`${API}/admin/users/${userId}`, { headers: { Authorization: `Bearer ${token}` } });
+      setToast({ message: "User deleted", type: "success" });
+      fetchData();
+    } catch (error) {
+      setToast({ message: "Failed to delete user", type: "error" });
+    }
+  };
+
+  const updateContactStatus = async (contactId, status) => {
+    try {
+      await axios.put(`${API}/admin/contacts/${contactId}/status?status=${status}`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      fetchData();
+    } catch (error) {
+      setToast({ message: "Failed to update", type: "error" });
+    }
+  };
+
   if (loading) return <div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>;
+
+  const tabs = [
+    { id: "inbox", label: "Inbox", icon: Mail, count: unreadCount },
+    ...(user?.user_type === "business" || user?.user_type === "admin" ? [{ id: "inventory", label: "Inventory", icon: Package }] : []),
+    ...(user?.user_type === "admin" ? [
+      { id: "users", label: "Users", icon: Users },
+      { id: "all-messages", label: "All Messages", icon: Mail },
+      { id: "contacts", label: "Contact Forms", icon: FileText, count: contacts.filter(c => c.status === "new").length }
+    ] : [])
+  ];
 
   return (
     <div className="min-h-screen bg-slate-50">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
       
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
+            <h1 className="text-3xl font-bold text-slate-900">
+              {user?.user_type === "admin" ? "Admin Dashboard" : "Dashboard"}
+            </h1>
             <p className="text-slate-600">Welcome back, {user?.name}</p>
           </div>
-          <div className="flex gap-3">
-            <input type="file" accept=".csv" ref={fileInputRef} onChange={handleBulkUpload} className="hidden" />
-            <button onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-100" data-testid="bulk-upload-btn">
-              <Upload size={18} /> Bulk Upload
-            </button>
-            <button onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700" data-testid="add-product-btn">
-              <Plus size={18} /> Add Product
-            </button>
-          </div>
+          {(user?.user_type === "business" || user?.user_type === "admin") && activeTab === "inventory" && (
+            <div className="flex gap-3">
+              <input type="file" accept=".csv" ref={fileInputRef} onChange={handleBulkUpload} className="hidden" />
+              <button onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-100 bg-white" data-testid="bulk-upload-btn">
+                <Upload size={18} /> Bulk Upload
+              </button>
+              <button onClick={() => setShowAddModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700" data-testid="add-product-btn">
+                <Plus size={18} /> Add Product
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Stats for Admin */}
+        {/* Admin Stats */}
         {user?.user_type === "admin" && stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
             <div className="bg-white p-4 rounded-xl border border-slate-200">
-              <p className="text-slate-600 text-sm">Total Users</p>
+              <p className="text-slate-600 text-sm">Users</p>
               <p className="text-2xl font-bold text-slate-900">{stats.total_users}</p>
             </div>
             <div className="bg-white p-4 rounded-xl border border-slate-200">
@@ -1053,76 +1142,365 @@ const Dashboard = () => {
               <p className="text-2xl font-bold text-slate-900">{stats.total_businesses}</p>
             </div>
             <div className="bg-white p-4 rounded-xl border border-slate-200">
+              <p className="text-slate-600 text-sm">Installers</p>
+              <p className="text-2xl font-bold text-slate-900">{stats.total_installers}</p>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-slate-200">
               <p className="text-slate-600 text-sm">Products</p>
               <p className="text-2xl font-bold text-slate-900">{stats.total_products}</p>
             </div>
             <div className="bg-white p-4 rounded-xl border border-slate-200">
+              <p className="text-slate-600 text-sm">Messages</p>
+              <p className="text-2xl font-bold text-slate-900">{stats.total_messages}</p>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-slate-200">
               <p className="text-slate-600 text-sm">New Contacts</p>
-              <p className="text-2xl font-bold text-slate-900">{stats.new_contacts}</p>
+              <p className="text-2xl font-bold text-blue-600">{stats.new_contacts}</p>
             </div>
           </div>
         )}
 
-        {/* Inventory Table */}
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="p-4 border-b border-slate-200 flex items-center justify-between">
-            <h2 className="font-bold text-slate-900">My Inventory ({products.length})</h2>
-            <a href={`${API}/products/template`} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1">
-              <Download size={16} /> CSV Template
-            </a>
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6 overflow-x-auto">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
+                activeTab === tab.id ? "bg-blue-600 text-white" : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+              }`}
+            >
+              <tab.icon size={18} />
+              {tab.label}
+              {tab.count > 0 && (
+                <span className={`text-xs px-2 py-0.5 rounded-full ${activeTab === tab.id ? "bg-white text-blue-600" : "bg-blue-600 text-white"}`}>
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Inbox Tab */}
+        {activeTab === "inbox" && (
+          <div className="space-y-4">
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <div className="p-4 border-b border-slate-200">
+                <h2 className="font-bold text-slate-900">Inbox ({messages.length})</h2>
+              </div>
+              {messages.length > 0 ? (
+                <div className="divide-y divide-slate-100">
+                  {messages.map(msg => (
+                    <div key={msg.id} className={`p-4 hover:bg-slate-50 ${!msg.is_read ? "bg-blue-50" : ""}`}>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1" onClick={() => markAsRead(msg.id)}>
+                          <div className="flex items-center gap-2 mb-1">
+                            {!msg.is_read && <span className="w-2 h-2 bg-blue-600 rounded-full"></span>}
+                            <span className="font-semibold text-slate-900">{msg.sender_name}</span>
+                            {msg.sender_business && <span className="text-sm text-slate-500">({msg.sender_business})</span>}
+                          </div>
+                          <p className="font-medium text-slate-800">{msg.subject}</p>
+                          <p className="text-sm text-slate-600 mt-1 line-clamp-2">{msg.message}</p>
+                          {msg.product_info && (
+                            <p className="text-xs text-blue-600 mt-1">Re: {msg.product_info.nags_number} - {msg.product_info.make} {msg.product_info.model}</p>
+                          )}
+                          <p className="text-xs text-slate-400 mt-2">{new Date(msg.created_at).toLocaleString()}</p>
+                        </div>
+                        <div className="flex gap-2 ml-4">
+                          <button onClick={() => setShowReplyModal(msg)} className="text-blue-600 hover:text-blue-700 p-2">
+                            <Mail size={18} />
+                          </button>
+                          <button onClick={() => deleteMessage(msg.id)} className="text-red-600 hover:text-red-700 p-2">
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-12 text-center">
+                  <Mail className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+                  <p className="text-slate-600">No messages in your inbox</p>
+                </div>
+              )}
+            </div>
+
+            {/* Sent Messages */}
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <div className="p-4 border-b border-slate-200">
+                <h2 className="font-bold text-slate-900">Sent Messages ({sentMessages.length})</h2>
+              </div>
+              {sentMessages.length > 0 ? (
+                <div className="divide-y divide-slate-100">
+                  {sentMessages.slice(0, 5).map(msg => (
+                    <div key={msg.id} className="p-4 hover:bg-slate-50">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm text-slate-500">To:</span>
+                        <span className="font-medium text-slate-900">{msg.recipient_name}</span>
+                      </div>
+                      <p className="font-medium text-slate-700">{msg.subject}</p>
+                      <p className="text-xs text-slate-400 mt-1">{new Date(msg.created_at).toLocaleString()}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-8 text-center text-slate-500">No sent messages</div>
+              )}
+            </div>
           </div>
-          
-          {products.length > 0 ? (
+        )}
+
+        {/* Inventory Tab */}
+        {activeTab === "inventory" && (user?.user_type === "business" || user?.user_type === "admin") && (
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+              <h2 className="font-bold text-slate-900">My Inventory ({products.length})</h2>
+              <a href={`${API}/products/template`} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1">
+                <Download size={16} /> CSV Template
+              </a>
+            </div>
+            {products.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">NAGS #</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">OEM #</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Vehicle</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Qty</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Price</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Location</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Visibility</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {products.map(product => (
+                      <tr key={product.id} className="hover:bg-slate-50">
+                        <td className="px-4 py-3 text-sm font-mono">{product.nags_number}</td>
+                        <td className="px-4 py-3 text-sm font-mono">{product.oem_number}</td>
+                        <td className="px-4 py-3 text-sm">{product.year_start && product.year_end ? `${product.year_start}-${product.year_end}` : ''} {product.make} {product.model}</td>
+                        <td className="px-4 py-3 text-sm">{product.quantity}</td>
+                        <td className="px-4 py-3 text-sm">{product.call_for_price ? "Call" : product.price ? `$${product.price}` : '-'}</td>
+                        <td className="px-4 py-3 text-sm text-slate-500">{product.location || '-'}</td>
+                        <td className="px-4 py-3">
+                          <button onClick={() => toggleVisibility(product)} className={`flex items-center gap-1 text-sm px-2 py-1 rounded ${product.listing_type === "public" ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600"}`}>
+                            {product.listing_type === "public" ? <Eye size={14} /> : <EyeOff size={14} />}
+                            {product.listing_type}
+                          </button>
+                        </td>
+                        <td className="px-4 py-3">
+                          <button onClick={() => handleDeleteProduct(product.id)} className="text-red-600 hover:text-red-700">
+                            <Trash2 size={18} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="p-12 text-center">
+                <Package className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+                <p className="text-slate-600">No products yet. Add your first product!</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Admin: Users Tab */}
+        {activeTab === "users" && user?.user_type === "admin" && (
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div className="p-4 border-b border-slate-200">
+              <h2 className="font-bold text-slate-900">All Users ({allUsers.length})</h2>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-slate-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">NAGS #</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">OEM #</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Vehicle</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Qty</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Price</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Location</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Visibility</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Name</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Email</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Type</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Status</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Joined</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {products.map(product => (
-                    <tr key={product.id} className="hover:bg-slate-50">
-                      <td className="px-4 py-3 text-sm font-mono">{product.nags_number}</td>
-                      <td className="px-4 py-3 text-sm font-mono">{product.oem_number}</td>
-                      <td className="px-4 py-3 text-sm">{product.year_start && product.year_end ? `${product.year_start}-${product.year_end}` : ''} {product.make} {product.model}</td>
-                      <td className="px-4 py-3 text-sm">{product.quantity}</td>
-                      <td className="px-4 py-3 text-sm">{product.call_for_price ? "Call" : product.price ? `$${product.price}` : '-'}</td>
-                      <td className="px-4 py-3 text-sm text-slate-500">{product.location || '-'}</td>
+                  {allUsers.map(u => (
+                    <tr key={u.id} className="hover:bg-slate-50">
+                      <td className="px-4 py-3 text-sm font-medium">{u.name}</td>
+                      <td className="px-4 py-3 text-sm">{u.email}</td>
                       <td className="px-4 py-3">
-                        <button onClick={() => toggleVisibility(product)} className={`flex items-center gap-1 text-sm px-2 py-1 rounded ${product.listing_type === "public" ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600"}`}>
-                          {product.listing_type === "public" ? <Eye size={14} /> : <EyeOff size={14} />}
-                          {product.listing_type}
-                        </button>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          u.user_type === "admin" ? "bg-purple-100 text-purple-700" :
+                          u.user_type === "business" ? "bg-blue-100 text-blue-700" :
+                          u.user_type === "installer" ? "bg-green-100 text-green-700" :
+                          "bg-slate-100 text-slate-700"
+                        }`}>{u.user_type}</span>
                       </td>
                       <td className="px-4 py-3">
-                        <button onClick={() => handleDeleteProduct(product.id)} className="text-red-600 hover:text-red-700">
-                          <Trash2 size={18} />
-                        </button>
+                        <span className={`text-xs px-2 py-1 rounded-full ${u.is_active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                          {u.is_active ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-500">{new Date(u.created_at).toLocaleDateString()}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-2">
+                          <button onClick={() => toggleUserStatus(u.id, u.is_active)} className={`text-xs px-2 py-1 rounded ${u.is_active ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700"}`}>
+                            {u.is_active ? "Deactivate" : "Activate"}
+                          </button>
+                          {u.user_type !== "admin" && (
+                            <button onClick={() => deleteUser(u.id)} className="text-red-600 hover:text-red-700">
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          ) : (
-            <div className="p-12 text-center">
-              <Package className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-600">No products yet. Add your first product!</p>
+          </div>
+        )}
+
+        {/* Admin: All Messages Tab */}
+        {activeTab === "all-messages" && user?.user_type === "admin" && (
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div className="p-4 border-b border-slate-200">
+              <h2 className="font-bold text-slate-900">All Messages ({allMessages.length})</h2>
             </div>
-          )}
-        </div>
+            {allMessages.length > 0 ? (
+              <div className="divide-y divide-slate-100">
+                {allMessages.map(msg => (
+                  <div key={msg.id} className="p-4 hover:bg-slate-50">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="font-medium">{msg.sender_name}</span>
+                          <span className="text-slate-400">→</span>
+                          <span className="font-medium">{msg.recipient_name}</span>
+                          {!msg.is_read && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Unread</span>}
+                        </div>
+                        <p className="font-medium text-slate-800 mt-1">{msg.subject}</p>
+                        <p className="text-sm text-slate-600 mt-1">{msg.message}</p>
+                        <p className="text-xs text-slate-400 mt-2">{new Date(msg.created_at).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-12 text-center text-slate-500">No messages yet</div>
+            )}
+          </div>
+        )}
+
+        {/* Admin: Contact Forms Tab */}
+        {activeTab === "contacts" && user?.user_type === "admin" && (
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div className="p-4 border-b border-slate-200">
+              <h2 className="font-bold text-slate-900">Contact Form Submissions ({contacts.length})</h2>
+            </div>
+            {contacts.length > 0 ? (
+              <div className="divide-y divide-slate-100">
+                {contacts.map(contact => (
+                  <div key={contact.id} className={`p-4 hover:bg-slate-50 ${contact.status === "new" ? "bg-yellow-50" : ""}`}>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-slate-900">{contact.name}</span>
+                          <span className="text-sm text-slate-500">&lt;{contact.email}&gt;</span>
+                          {contact.phone && <span className="text-sm text-slate-500">{contact.phone}</span>}
+                        </div>
+                        <p className="font-medium text-slate-800">{contact.subject}</p>
+                        <p className="text-sm text-slate-600 mt-1">{contact.message}</p>
+                        <p className="text-xs text-slate-400 mt-2">{new Date(contact.created_at).toLocaleString()}</p>
+                      </div>
+                      <div className="flex items-center gap-2 ml-4">
+                        <select
+                          value={contact.status}
+                          onChange={(e) => updateContactStatus(contact.id, e.target.value)}
+                          className={`text-xs px-2 py-1 rounded border ${
+                            contact.status === "new" ? "bg-yellow-100 border-yellow-200" :
+                            contact.status === "read" ? "bg-blue-100 border-blue-200" :
+                            "bg-green-100 border-green-200"
+                          }`}
+                        >
+                          <option value="new">New</option>
+                          <option value="read">Read</option>
+                          <option value="resolved">Resolved</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-12 text-center text-slate-500">No contact submissions</div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Add Product Modal */}
       {showAddModal && <AddProductModal onClose={() => setShowAddModal(false)} onSuccess={() => { setShowAddModal(false); fetchData(); }} token={token} setToast={setToast} />}
+
+      {/* Reply Modal */}
+      {showReplyModal && <ReplyModal message={showReplyModal} onClose={() => setShowReplyModal(null)} token={token} setToast={setToast} onSuccess={() => { setShowReplyModal(null); fetchData(); }} />}
+    </div>
+  );
+};
+
+// Reply Modal Component
+const ReplyModal = ({ message, onClose, token, setToast, onSuccess }) => {
+  const [reply, setReply] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!reply.trim()) return;
+    setLoading(true);
+    try {
+      await axios.post(`${API}/messages/${message.id}/reply`, { message: reply }, { headers: { Authorization: `Bearer ${token}` } });
+      setToast({ message: "Reply sent!", type: "success" });
+      onSuccess();
+    } catch (error) {
+      setToast({ message: "Failed to send reply", type: "error" });
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-white rounded-xl max-w-lg w-full" onClick={e => e.stopPropagation()}>
+        <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+          <h2 className="font-bold">Reply to {message.sender_name}</h2>
+          <button onClick={onClose}><X size={24} /></button>
+        </div>
+        <div className="p-4">
+          <div className="bg-slate-50 p-3 rounded-lg mb-4">
+            <p className="text-sm font-medium text-slate-700">{message.subject}</p>
+            <p className="text-sm text-slate-600 mt-1">{message.message}</p>
+          </div>
+          <form onSubmit={handleSubmit}>
+            <textarea
+              value={reply}
+              onChange={(e) => setReply(e.target.value)}
+              placeholder="Type your reply..."
+              rows={4}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+              required
+            />
+            <button type="submit" disabled={loading}
+              className="mt-4 w-full bg-blue-600 text-white h-10 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50">
+              {loading ? "Sending..." : "Send Reply"}
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 };
