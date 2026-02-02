@@ -729,6 +729,74 @@ async def delete_all_products(current_user: dict = Depends(get_current_user)):
 
 # ==================== PUBLIC SEARCH ROUTES ====================
 
+@api_router.get("/search/autocomplete", response_model=dict)
+async def autocomplete_search(q: str = ""):
+    """Autocomplete suggestions for part number search"""
+    if not q or len(q) < 1:
+        return {"suggestions": []}
+    
+    # Search for matching part numbers
+    query = {
+        "listing_type": "public",
+        "$or": [
+            {"nags_number": {"$regex": f"^{q}", "$options": "i"}},
+            {"oem_number": {"$regex": f"^{q}", "$options": "i"}},
+            {"part_number": {"$regex": f"^{q}", "$options": "i"}},
+            {"nags_number": {"$regex": q, "$options": "i"}},
+            {"oem_number": {"$regex": q, "$options": "i"}},
+        ]
+    }
+    
+    products = await db.products.find(
+        query, 
+        {"_id": 0, "nags_number": 1, "oem_number": 1, "part_number": 1, "make": 1, "model": 1, "year_start": 1, "year_end": 1, "category": 1}
+    ).limit(10).to_list(10)
+    
+    suggestions = []
+    seen = set()
+    
+    for p in products:
+        # Add NAGS number suggestion
+        if p.get("nags_number") and p["nags_number"].upper().startswith(q.upper()):
+            key = p["nags_number"]
+            if key not in seen:
+                seen.add(key)
+                suggestions.append({
+                    "value": p["nags_number"],
+                    "label": f"{p['nags_number']}",
+                    "sublabel": f"{p.get('make', '')} {p.get('model', '')}".strip() or p.get('category', ''),
+                    "type": "NAGS"
+                })
+        
+        # Add OEM number suggestion
+        if p.get("oem_number") and p["oem_number"].upper().startswith(q.upper()):
+            key = p["oem_number"]
+            if key not in seen:
+                seen.add(key)
+                suggestions.append({
+                    "value": p["oem_number"],
+                    "label": f"{p['oem_number']}",
+                    "sublabel": f"{p.get('make', '')} {p.get('model', '')}".strip() or p.get('category', ''),
+                    "type": "OEM"
+                })
+        
+        # Add part number suggestion
+        if p.get("part_number") and p["part_number"].upper().startswith(q.upper()):
+            key = p["part_number"]
+            if key not in seen:
+                seen.add(key)
+                suggestions.append({
+                    "value": p["part_number"],
+                    "label": f"{p['part_number']}",
+                    "sublabel": f"{p.get('make', '')} {p.get('model', '')}".strip() or p.get('category', ''),
+                    "type": "Part#"
+                })
+    
+    # Sort by relevance (exact prefix matches first)
+    suggestions.sort(key=lambda x: (not x["value"].upper().startswith(q.upper()), x["value"]))
+    
+    return {"suggestions": suggestions[:8]}
+
 @api_router.post("/search", response_model=dict)
 async def search_products(search: ProductSearch):
     """Public search - available to everyone"""
