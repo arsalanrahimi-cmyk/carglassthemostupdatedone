@@ -1385,9 +1385,20 @@ const Dashboard = () => {
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <div className="p-4 border-b border-slate-200 flex items-center justify-between">
               <h2 className="font-bold text-slate-900">My Inventory ({products.length})</h2>
-              <a href={`${API}/products/template`} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1">
-                <Download size={16} /> CSV Template
-              </a>
+              <div className="flex items-center gap-4">
+                {products.length > 0 && (
+                  <button 
+                    onClick={handleDeleteAllProducts}
+                    className="text-sm text-red-600 hover:text-red-700 flex items-center gap-1 px-3 py-1.5 border border-red-200 rounded-lg hover:bg-red-50"
+                    data-testid="delete-all-btn"
+                  >
+                    <Trash2 size={14} /> Delete All
+                  </button>
+                )}
+                <a href={`${API}/products/template`} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1">
+                  <Download size={16} /> CSV Template
+                </a>
+              </div>
             </div>
             {products.length > 0 ? (
               <div className="overflow-x-auto">
