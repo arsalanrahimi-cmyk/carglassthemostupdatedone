@@ -375,6 +375,169 @@ class CarGlassHubAPITester:
         success, _ = self.run_test("Get Current User", "GET", "auth/me", 200)
         return success
 
+    def test_messaging_system(self):
+        """Test messaging system functionality"""
+        if not self.token or not self.business_token:
+            print("⚠️  Skipping messaging tests - need both business tokens")
+            return False
+            
+        # Store original token
+        original_token = self.token
+        message_id = None
+        
+        try:
+            # Test 1: Send message from business to business
+            self.token = self.business_token  # Use business token to send message
+            success, response = self.run_test(
+                "Send Message to Seller",
+                "POST",
+                "messages",
+                200,
+                data={
+                    "recipient_id": "test-business-id",  # This will be handled by backend
+                    "subject": "Test Message Subject",
+                    "message": "This is a test message from automated testing."
+                }
+            )
+            
+            if success and 'message_id' in response:
+                message_id = response['message_id']
+                print(f"   ✅ Message sent with ID: {message_id}")
+            
+            # Test 2: Get inbox messages
+            success, response = self.run_test(
+                "Get Inbox Messages",
+                "GET",
+                "messages/inbox",
+                200
+            )
+            
+            # Test 3: Get sent messages
+            success, response = self.run_test(
+                "Get Sent Messages", 
+                "GET",
+                "messages/sent",
+                200
+            )
+            
+            # Test 4: Get unread count
+            success, response = self.run_test(
+                "Get Unread Message Count",
+                "GET", 
+                "messages/unread-count",
+                200
+            )
+            
+            if success and 'unread_count' in response:
+                print(f"   ✅ Unread count: {response['unread_count']}")
+            
+            # Test 5: Mark message as read (if we have a message ID)
+            if message_id:
+                success, response = self.run_test(
+                    "Mark Message as Read",
+                    "PUT",
+                    f"messages/{message_id}/read",
+                    200
+                )
+                
+                # Test 6: Reply to message
+                success, response = self.run_test(
+                    "Reply to Message",
+                    "POST",
+                    f"messages/{message_id}/reply",
+                    200,
+                    data={
+                        "message": "This is a test reply message."
+                    }
+                )
+                
+                # Test 7: Delete message
+                success, response = self.run_test(
+                    "Delete Message",
+                    "DELETE",
+                    f"messages/{message_id}",
+                    200
+                )
+            
+            return True
+            
+        finally:
+            # Restore original token
+            self.token = original_token
+
+    def test_admin_messaging(self):
+        """Test admin messaging functionality"""
+        # First register an admin account
+        timestamp = int(time.time())
+        admin_email = f"admin_{timestamp}@example.com"
+        
+        success, response = self.run_test(
+            "Admin Registration",
+            "POST",
+            "auth/register/admin",
+            200,
+            data={
+                "email": admin_email,
+                "password": "testpass123",
+                "name": "Test Admin",
+                "admin_code": "CARGLASS2024ADMIN"
+            }
+        )
+        
+        if not success or 'token' not in response:
+            print("⚠️  Skipping admin messaging tests - admin registration failed")
+            return False
+            
+        admin_token = response['token']
+        original_token = self.token
+        
+        try:
+            self.token = admin_token
+            
+            # Test admin get all messages
+            success, response = self.run_test(
+                "Admin Get All Messages",
+                "GET",
+                "admin/messages",
+                200
+            )
+            
+            # Test admin get all contacts
+            success, response = self.run_test(
+                "Admin Get Contact Forms",
+                "GET", 
+                "admin/contacts",
+                200
+            )
+            
+            # Test admin get users
+            success, response = self.run_test(
+                "Admin Get All Users",
+                "GET",
+                "admin/users", 
+                200
+            )
+            
+            # Test admin stats
+            success, response = self.run_test(
+                "Admin Get Stats",
+                "GET",
+                "admin/stats",
+                200
+            )
+            
+            if success:
+                print(f"   ✅ Admin stats retrieved successfully")
+                if 'total_messages' in response:
+                    print(f"   📊 Total messages in system: {response['total_messages']}")
+                if 'new_contacts' in response:
+                    print(f"   📊 New contacts: {response['new_contacts']}")
+            
+            return True
+            
+        finally:
+            self.token = original_token
+
     def run_all_tests(self):
         """Run all API tests"""
         print("🚀 Starting CarGlassHub API Tests")
