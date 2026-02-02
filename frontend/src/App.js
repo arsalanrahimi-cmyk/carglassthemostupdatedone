@@ -552,6 +552,103 @@ const Home = () => {
           </div>
         </section>
       )}
+
+      {/* Contact Seller Modal */}
+      {showContactModal && (
+        <ContactSellerModal 
+          product={showContactModal} 
+          onClose={() => setShowContactModal(null)} 
+          token={token}
+          setToast={setToast}
+        />
+      )}
+      
+      {toast && <Toast {...toast} onClose={() => setToast(null)} />}
+    </div>
+  );
+};
+
+// Contact Seller Modal
+const ContactSellerModal = ({ product, onClose, token, setToast }) => {
+  const [subject, setSubject] = useState(`Inquiry about ${product.nags_number || 'your part'}`);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!message.trim()) return;
+    setLoading(true);
+    try {
+      await axios.post(`${API}/messages`, {
+        recipient_id: product.business_id,
+        product_id: product.id,
+        subject,
+        message
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      setToast({ message: "Message sent to seller!", type: "success" });
+      onClose();
+    } catch (error) {
+      setToast({ message: error.response?.data?.detail || "Failed to send message", type: "error" });
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-white rounded-xl max-w-lg w-full" onClick={e => e.stopPropagation()}>
+        <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-700 rounded-t-xl">
+          <h2 className="font-bold text-white">Contact Seller</h2>
+          <button onClick={onClose} className="text-white hover:text-blue-200"><X size={24} /></button>
+        </div>
+        <div className="p-6">
+          {/* Product Info */}
+          <div className="bg-slate-50 p-4 rounded-lg mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Building2 size={16} className="text-slate-500" />
+              <span className="font-medium">{product.seller?.business_name}</span>
+            </div>
+            <p className="text-sm text-slate-600">
+              <span className="font-medium">Part:</span> {product.nags_number} {product.oem_number && `/ ${product.oem_number}`}
+            </p>
+            {product.make && (
+              <p className="text-sm text-slate-600">
+                {product.year_start}-{product.year_end} {product.make} {product.model}
+              </p>
+            )}
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Subject</label>
+              <input
+                type="text"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                className="w-full h-10 px-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Message</label>
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Hi, I'm interested in this part..."
+                rows={4}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-blue-600 text-white h-10 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
+            >
+              {loading ? "Sending..." : "Send Message"}
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 };
