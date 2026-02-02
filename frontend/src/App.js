@@ -274,6 +274,10 @@ const Home = () => {
   const [searched, setSearched] = useState(false);
   const [showContactModal, setShowContactModal] = useState(null);
   const [toast, setToast] = useState(null);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const searchInputRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -304,10 +308,67 @@ const Home = () => {
     }
   }, [make]);
 
+  // Autocomplete effect
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (partNumber.length < 1) {
+        setSuggestions([]);
+        setShowSuggestions(false);
+        return;
+      }
+      
+      setLoadingSuggestions(true);
+      try {
+        const res = await axios.get(`${API}/search/autocomplete?q=${encodeURIComponent(partNumber)}`);
+        setSuggestions(res.data.suggestions || []);
+        setShowSuggestions(res.data.suggestions?.length > 0);
+      } catch (error) {
+        console.error("Autocomplete error:", error);
+      }
+      setLoadingSuggestions(false);
+    };
+
+    const debounce = setTimeout(fetchSuggestions, 200);
+    return () => clearTimeout(debounce);
+  }, [partNumber]);
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchInputRef.current && !searchInputRef.current.contains(e.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSelectSuggestion = (suggestion) => {
+    setPartNumber(suggestion.value);
+    setShowSuggestions(false);
+    // Auto search when selecting
+    handleSearchWithValue(suggestion.value);
+  };
+
+  const handleSearchWithValue = async (searchValue) => {
+    setLoading(true);
+    setSearched(true);
+    setShowSuggestions(false);
+    try {
+      const res = await axios.post(`${API}/search`, { part_number: searchValue });
+      setSearchResults(res.data.results);
+    } catch (error) {
+      console.error("Search error:", error);
+      setSearchResults([]);
+    }
+    setLoading(false);
+  };
+
   const handleSearch = async (e) => {
     e.preventDefault();
     setLoading(true);
     setSearched(true);
+    setShowSuggestions(false);
     try {
       const searchData = {};
       if (searchType === "part" && partNumber) {
