@@ -1121,15 +1121,16 @@ const Dashboard = () => {
 // Add Product Modal
 const AddProductModal = ({ onClose, onSuccess, token, setToast }) => {
   const [formData, setFormData] = useState({
-    part_number: "", nags_number: "", category: "windshield",
-    year_start: 2020, year_end: 2024, make: "", model: "",
-    condition: "New", price: "", call_for_price: false, quantity: 1,
-    listing_type: "public", description: ""
+    part_number: "", nags_number: "", category: "",
+    year_start: "", year_end: "", make: "", model: "",
+    condition: "", price: "", call_for_price: false, quantity: 1,
+    listing_type: "public", description: "", images: []
   });
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [makes, setMakes] = useState([]);
   const [models, setModels] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
 
   useEffect(() => {
     axios.get(`${API}/vehicles/categories`).then(res => setCategories(res.data));
@@ -1139,21 +1140,69 @@ const AddProductModal = ({ onClose, onSuccess, token, setToast }) => {
   useEffect(() => {
     if (formData.make) {
       axios.get(`${API}/vehicles/models/${formData.make}`).then(res => setModels(res.data));
+    } else {
+      setModels([]);
     }
   }, [formData.make]);
 
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    const maxImages = 3;
+    const currentCount = formData.images.length;
+    const remainingSlots = maxImages - currentCount;
+    
+    if (files.length > remainingSlots) {
+      setToast({ message: `You can only upload ${remainingSlots} more image(s). Maximum is 3.`, type: "error" });
+      return;
+    }
+
+    files.forEach(file => {
+      if (file.size > 5 * 1024 * 1024) {
+        setToast({ message: "Each image must be less than 5MB", type: "error" });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result;
+        setFormData(prev => ({
+          ...prev,
+          images: [...prev.images, base64].slice(0, maxImages)
+        }));
+        setImagePreviews(prev => [...prev, base64].slice(0, maxImages));
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!formData.nags_number.trim()) {
+      setToast({ message: "NAGS Number is required", type: "error" });
+      return;
+    }
+    
     setLoading(true);
     try {
-      await axios.post(`${API}/products`, {
+      const submitData = {
         ...formData,
-        price: formData.call_for_price ? null : parseFloat(formData.price),
-        year_start: parseInt(formData.year_start),
-        year_end: parseInt(formData.year_end),
-        quantity: parseInt(formData.quantity)
-      }, { headers: { Authorization: `Bearer ${token}` } });
-      setToast({ message: "Product added!", type: "success" });
+        price: formData.call_for_price || !formData.price ? null : parseFloat(formData.price),
+        year_start: formData.year_start ? parseInt(formData.year_start) : null,
+        year_end: formData.year_end ? parseInt(formData.year_end) : null,
+        quantity: formData.quantity ? parseInt(formData.quantity) : 1
+      };
+      
+      await axios.post(`${API}/products`, submitData, { headers: { Authorization: `Bearer ${token}` } });
+      setToast({ message: "Product added successfully!", type: "success" });
       onSuccess();
     } catch (error) {
       setToast({ message: error.response?.data?.detail || "Failed to add product", type: "error" });
@@ -1164,94 +1213,223 @@ const AddProductModal = ({ onClose, onSuccess, token, setToast }) => {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <div className="p-6 border-b border-slate-200 flex items-center justify-between">
-          <h2 className="text-xl font-bold">Add Product</h2>
-          <button onClick={onClose}><X size={24} /></button>
+        <div className="p-6 border-b border-slate-200 flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-700 rounded-t-xl">
+          <h2 className="text-xl font-bold text-white">Add New Product</h2>
+          <button onClick={onClose} className="text-white hover:text-blue-200"><X size={24} /></button>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Part Number *</label>
-              <input type="text" required value={formData.part_number} onChange={(e) => setFormData({...formData, part_number: e.target.value})}
-                className="w-full h-10 px-3 border border-slate-200 rounded-lg" />
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* NAGS Number - Required */}
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <label className="block text-sm font-semibold text-blue-900 mb-2">NAGS Number *</label>
+            <input 
+              type="text" 
+              value={formData.nags_number} 
+              onChange={(e) => setFormData({...formData, nags_number: e.target.value})}
+              placeholder="e.g., FW02537, DW01456"
+              className="w-full h-12 px-4 border-2 border-blue-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-lg"
+              data-testid="nags-number-input"
+            />
+            <p className="text-xs text-blue-600 mt-1">This is the only required field</p>
+          </div>
+
+          {/* Optional Fields Section */}
+          <div className="space-y-4">
+            <p className="text-sm text-slate-500 font-medium">Optional Details (fill in what you know)</p>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Part Number</label>
+                <input 
+                  type="text" 
+                  value={formData.part_number} 
+                  onChange={(e) => setFormData({...formData, part_number: e.target.value})}
+                  placeholder="Your internal part #"
+                  className="w-full h-10 px-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+                <select 
+                  value={formData.category} 
+                  onChange={(e) => setFormData({...formData, category: e.target.value})}
+                  className="w-full h-10 px-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select category</option>
+                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
             </div>
+
+            <div className="grid grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Year From</label>
+                <input 
+                  type="number" 
+                  value={formData.year_start} 
+                  onChange={(e) => setFormData({...formData, year_start: e.target.value})}
+                  placeholder="2020"
+                  className="w-full h-10 px-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Year To</label>
+                <input 
+                  type="number" 
+                  value={formData.year_end} 
+                  onChange={(e) => setFormData({...formData, year_end: e.target.value})}
+                  placeholder="2024"
+                  className="w-full h-10 px-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Make</label>
+                <select 
+                  value={formData.make} 
+                  onChange={(e) => setFormData({...formData, make: e.target.value, model: ""})}
+                  className="w-full h-10 px-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select make</option>
+                  {makes.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Model</label>
+                <select 
+                  value={formData.model} 
+                  onChange={(e) => setFormData({...formData, model: e.target.value})}
+                  className="w-full h-10 px-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  disabled={!formData.make}
+                >
+                  <option value="">{formData.make ? "Select model" : "Select make first"}</option>
+                  {models.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Condition</label>
+                <select 
+                  value={formData.condition} 
+                  onChange={(e) => setFormData({...formData, condition: e.target.value})}
+                  className="w-full h-10 px-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select condition</option>
+                  <option value="New">New</option>
+                  <option value="Used">Used</option>
+                  <option value="OEM">OEM</option>
+                  <option value="Aftermarket">Aftermarket</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Price ($)</label>
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  value={formData.price} 
+                  onChange={(e) => setFormData({...formData, price: e.target.value})}
+                  placeholder="0.00"
+                  disabled={formData.call_for_price} 
+                  className="w-full h-10 px-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Quantity</label>
+                <input 
+                  type="number" 
+                  min="1" 
+                  value={formData.quantity} 
+                  onChange={(e) => setFormData({...formData, quantity: e.target.value})}
+                  placeholder="1"
+                  className="w-full h-10 px-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
             <div>
-              <label className="block text-sm font-medium mb-1">NAGS Number</label>
-              <input type="text" value={formData.nags_number} onChange={(e) => setFormData({...formData, nags_number: e.target.value})}
-                className="w-full h-10 px-3 border border-slate-200 rounded-lg" />
+              <label className="block text-sm font-medium text-slate-700 mb-1">Description / Notes</label>
+              <textarea 
+                value={formData.description} 
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                placeholder="Any additional details about this part..."
+                rows={2}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Image Upload */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Product Images (up to 3)</label>
+              <div className="flex flex-wrap gap-3">
+                {imagePreviews.map((preview, idx) => (
+                  <div key={idx} className="relative w-24 h-24 rounded-lg overflow-hidden border border-slate-200">
+                    <img src={preview} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(idx)}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+                {imagePreviews.length < 3 && (
+                  <label className="w-24 h-24 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                    <Upload size={24} className="text-slate-400" />
+                    <span className="text-xs text-slate-500 mt-1">Add Photo</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+              <p className="text-xs text-slate-500 mt-1">JPG, PNG up to 5MB each</p>
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Category *</label>
-            <select required value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})}
-              className="w-full h-10 px-3 border border-slate-200 rounded-lg">
-              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </div>
-          <div className="grid grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Year Start</label>
-              <input type="number" value={formData.year_start} onChange={(e) => setFormData({...formData, year_start: e.target.value})}
-                className="w-full h-10 px-3 border border-slate-200 rounded-lg" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Year End</label>
-              <input type="number" value={formData.year_end} onChange={(e) => setFormData({...formData, year_end: e.target.value})}
-                className="w-full h-10 px-3 border border-slate-200 rounded-lg" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Make *</label>
-              <select required value={formData.make} onChange={(e) => setFormData({...formData, make: e.target.value, model: ""})}
-                className="w-full h-10 px-3 border border-slate-200 rounded-lg">
-                <option value="">Select</option>
-                {makes.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Model *</label>
-              <select required value={formData.model} onChange={(e) => setFormData({...formData, model: e.target.value})}
-                className="w-full h-10 px-3 border border-slate-200 rounded-lg">
-                <option value="">Select</option>
-                {models.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Condition</label>
-              <select value={formData.condition} onChange={(e) => setFormData({...formData, condition: e.target.value})}
-                className="w-full h-10 px-3 border border-slate-200 rounded-lg">
-                <option>New</option><option>Used</option><option>OEM</option><option>Aftermarket</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Price</label>
-              <input type="number" step="0.01" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})}
-                disabled={formData.call_for_price} className="w-full h-10 px-3 border border-slate-200 rounded-lg disabled:bg-slate-100" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Quantity</label>
-              <input type="number" min="1" value={formData.quantity} onChange={(e) => setFormData({...formData, quantity: e.target.value})}
-                className="w-full h-10 px-3 border border-slate-200 rounded-lg" />
-            </div>
-          </div>
-          <div className="flex items-center gap-6">
-            <label className="flex items-center gap-2">
-              <input type="checkbox" checked={formData.call_for_price} onChange={(e) => setFormData({...formData, call_for_price: e.target.checked})} />
-              <span className="text-sm">Call for Price</span>
+
+          {/* Options */}
+          <div className="flex flex-wrap items-center gap-6 pt-4 border-t border-slate-200">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={formData.call_for_price} 
+                onChange={(e) => setFormData({...formData, call_for_price: e.target.checked})}
+                className="w-4 h-4 text-blue-600 rounded"
+              />
+              <span className="text-sm text-slate-700">Call for Price</span>
             </label>
-            <label className="flex items-center gap-2">
-              <input type="radio" checked={formData.listing_type === "public"} onChange={() => setFormData({...formData, listing_type: "public"})} />
-              <span className="text-sm">Public (Searchable)</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="radio" checked={formData.listing_type === "private"} onChange={() => setFormData({...formData, listing_type: "private"})} />
-              <span className="text-sm">Private (Internal)</span>
-            </label>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input 
+                  type="radio" 
+                  checked={formData.listing_type === "public"} 
+                  onChange={() => setFormData({...formData, listing_type: "public"})}
+                  className="w-4 h-4 text-blue-600"
+                />
+                <span className="text-sm text-slate-700">🌐 Public (Searchable)</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input 
+                  type="radio" 
+                  checked={formData.listing_type === "private"} 
+                  onChange={() => setFormData({...formData, listing_type: "private"})}
+                  className="w-4 h-4 text-blue-600"
+                />
+                <span className="text-sm text-slate-700">🔒 Private (Internal)</span>
+              </label>
+            </div>
           </div>
-          <button type="submit" disabled={loading}
-            className="w-full bg-blue-600 text-white h-12 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50">
-            {loading ? "Adding..." : "Add Product"}
+
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="w-full bg-blue-600 text-white h-12 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          >
+            {loading ? "Adding Product..." : "Add Product"}
           </button>
         </form>
       </div>
