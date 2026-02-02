@@ -5,7 +5,7 @@ import {
   Search, Car, MapPin, Phone, Mail, User, Shield, Menu, X, 
   ChevronDown, Wrench, Store, CheckCircle, AlertCircle, Upload,
   Package, Settings, LogOut, Users, BarChart3, FileText, Download,
-  Building2, Eye, EyeOff, Trash2, Edit, Plus, Home, Info
+  Building2, Eye, EyeOff, Trash2, Edit, Plus, Info
 } from "lucide-react";
 import "./App.css";
 
