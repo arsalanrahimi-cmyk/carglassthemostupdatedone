@@ -1165,6 +1165,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editProduct, setEditProduct] = useState(null);
   const [showReplyModal, setShowReplyModal] = useState(null);
   const [stats, setStats] = useState(null);
   const [allUsers, setAllUsers] = useState([]);
