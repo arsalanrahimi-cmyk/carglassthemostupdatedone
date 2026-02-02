@@ -11,15 +11,26 @@ class CarGlassHubAPITester:
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.token = None
+        self.business_token = None
         self.tests_run = 0
         self.tests_passed = 0
         self.test_results = []
         
         # Test credentials from review request
-        self.test_user = {
-            "email": "testuser3@example.com",
-            "password": "testpass123", 
-            "name": "Test User 3"
+        self.test_business = {
+            "email": "testbiz2@example.com",
+            "password": "testpass123",
+            "business_name": "Quality Auto Glass",
+            "contact_name": "Jane Doe",
+            "phone": "555-987-6543",
+            "city": "Phoenix",
+            "state": "AZ",
+            "zip_code": "85001"
+        }
+        
+        self.existing_business = {
+            "email": "john@abcautoglass.com",
+            "password": "password123"
         }
 
     def log_test(self, name, success, details="", endpoint=""):
