@@ -481,11 +481,19 @@ async def create_product(product: ProductCreate, current_user: dict = Depends(ge
     if current_user["user_type"] not in ["business", "admin"]:
         raise HTTPException(status_code=403, detail="Only businesses can create products")
     
+    # Validate NAGS number is provided
+    if not product.nags_number or not product.nags_number.strip():
+        raise HTTPException(status_code=400, detail="NAGS Number is required")
+    
+    # Limit images to 3
+    images = product.images[:3] if product.images else []
+    
     product_doc = {
         "id": str(uuid.uuid4()),
         "business_id": current_user.get("business_id"),
         "user_id": current_user["id"],
         **product.model_dump(),
+        "images": images,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
