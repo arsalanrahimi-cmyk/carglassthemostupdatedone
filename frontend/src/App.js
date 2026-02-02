@@ -2274,6 +2274,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register/business" element={<BusinessRegister />} />
               <Route path="/register/installer" element={<InstallerRegister />} />
+              <Route path="/register/admin" element={<AdminRegister />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/installers" element={<FindInstallers />} />
