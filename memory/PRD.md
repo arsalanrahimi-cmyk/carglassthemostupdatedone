@@ -1,109 +1,75 @@
 # CarGlassHub - Auto Glass Marketplace & Inventory Management Platform
 
-## Original Problem Statement
-Rebuild CarGlassHub as a B2B marketplace platform for the auto glass industry. Platform connects businesses to list products, manage inventory, and find installers. Platform is NOT responsible for financial transactions or quality of parts.
+## Latest Update (Feb 2, 2026)
+Added complete messaging system with buyer-seller communication and admin panel.
 
-## Latest Updates (Feb 2, 2026)
-- Added Part Location field (private - only visible to business owner)
-- Updated CSV template with location column
-- Added footer disclaimer
-- NAGS Number AND OEM Part Number are both required fields
-- Location excluded from public search results for privacy
+## New Features Added
 
-## User Personas
-1. **Auto Glass Businesses** - List and manage inventory, buy/sell parts
-2. **Mobile Installers** - Register for job opportunities
-3. **Admin** - Manage users, products, and content
-4. **Public Visitors** - Can search parts without login
+### 1. Messaging System ✅
+- **Contact Seller**: Logged-in users can message sellers directly from search results
+- **Inbox**: Dashboard shows received messages with unread count
+- **Sent Messages**: Track all sent messages
+- **Reply**: Reply to messages directly from inbox
+- **Product Context**: Messages include product info for reference
 
-## Core Features Implemented
+### 2. Admin Panel ✅
+Admin dashboard tabs:
+- **Inbox**: Admin's own messages
+- **Inventory**: Product management
+- **Users**: View all users, toggle activate/deactivate, delete users
+- **All Messages**: Monitor all messages between buyers/sellers
+- **Contact Forms**: View all Contact Us submissions with status management
 
-### 1. User Registration & Login ✅
-- Business registration with full company details
-- Installer registration with service area
-- Admin registration (via code: CARGLASS2024ADMIN)
-- JWT authentication with password recovery
+### 3. Contact Form Integration ✅
+- Contact Us page submissions go to admin inbox
+- Status tracking: New → Read → Resolved
+- Admin can manage all contact submissions
 
-### 2. Add Product Form ✅
-**Required Fields:**
-- NAGS Number *
-- OEM Part Number *
+## API Endpoints - Messaging
 
-**Optional Fields:**
-- Your Part Number
-- Category (Windshield, Door Glass, etc.)
-- Year Range, Make, Model
-- Condition (New/Used/OEM/Aftermarket)
-- Price or "Call for Price"
-- Quantity
-- Description
-- **Part Location** (PRIVATE - only visible to business owner)
-- Product Images (up to 3)
-- Public/Private listing toggle
+### User Messages
+- POST `/api/messages` - Send message to seller
+- GET `/api/messages/inbox` - Get received messages
+- GET `/api/messages/sent` - Get sent messages
+- GET `/api/messages/unread-count` - Get unread count
+- PUT `/api/messages/{id}/read` - Mark as read
+- POST `/api/messages/{id}/reply` - Reply to message
+- DELETE `/api/messages/{id}` - Delete message
 
-### 3. Inventory Management ✅
-- Dashboard shows: NAGS #, OEM #, Vehicle, Qty, Price, **Location**, Visibility
-- Toggle public/private visibility
-- Bulk CSV upload with location column
-- Location field is PRIVATE (not shown in public search)
+### Admin Messages
+- GET `/api/admin/messages` - All messages (admin only)
+- DELETE `/api/admin/messages/{id}` - Delete any message
+- PUT `/api/admin/contacts/{id}/status` - Update contact status
+- DELETE `/api/admin/users/{id}` - Delete user and all their data
 
-### 4. Public Search ✅
-- Available to ALL visitors (no login required)
-- Search by part number (NAGS, OEM, Interchange)
-- Search by vehicle (Year/Make/Model)
-- **Location is NOT exposed in search results**
-
-### 5. CSV Bulk Upload ✅
-Template columns:
-- nags_number (required)
-- oem_number (required)
-- part_number, category, year_start, year_end, make, model
-- condition, price, call_for_price, quantity
-- **location** (private)
-- description, listing_type
-
-### 6. Disclaimers ✅
-**Footer Disclaimer:**
-"CarGlassHub is a platform that connects businesses to help find the right auto glass parts. We are NOT responsible for the quality of parts listed, and we hold NO financial responsibility for transactions between parties. All transactions are conducted directly between businesses at their own risk."
-
-**Add Product Modal Disclaimer:**
-Same disclaimer shown at top of form.
-
-### 7. Static Pages ✅
-- Disclaimer page
-- Terms & Conditions
-- Privacy Policy
-- Contact Us
-
-## Test Results (Feb 2, 2026)
+## Test Results
 - Backend: 100%
-- Frontend: 100%
-- Integration: 100%
-- Location privacy verified - excluded from public search
+- Frontend: 85%
+- Integration: 90%
 
-## API Endpoints
+## User Flows
 
-### Products
-- GET `/api/products/template` - Download CSV template (with location)
-- POST `/api/products` - Create product (requires NAGS + OEM)
-- POST `/api/products/bulk` - Bulk upload
-- GET `/api/products/my-inventory` - Get user's inventory (includes location)
-- POST `/api/search` - Public search (excludes location)
-- GET `/api/products/{id}` - Public product details (excludes location)
+### Buyer → Seller Communication
+1. Buyer searches for part
+2. Finds product in results
+3. Clicks "Message" button (must be logged in)
+4. Fills in subject and message
+5. Message sent to seller
 
-## Tech Stack
-- Frontend: React 19, Tailwind CSS, React Router
-- Backend: FastAPI, Motor (MongoDB async)
-- Database: MongoDB
-- Authentication: JWT tokens
+### Seller Receives Message
+1. Dashboard shows unread count badge on Inbox tab
+2. Opens Inbox to see new message
+3. Click message to mark as read
+4. Click reply to respond
+
+### Admin Monitoring
+1. Login as admin (code: CARGLASS2024ADMIN)
+2. Dashboard shows stats: Users, Businesses, Installers, Products, Messages, Contacts
+3. View all users and manage status
+4. Monitor all messages between users
+5. Handle Contact Us form submissions
 
 ## Live Preview
 https://carfix-support.preview.emergentagent.com
 
-## Deployment Ready ✅
-All features tested and working. Ready for domain linking.
-
-## Important Notes
-- Location field is PRIVATE - never exposed in public search/product views
-- NAGS Number and OEM Part Number are REQUIRED for all products
-- Platform only connects businesses - no financial responsibility
+## Ready for Deployment ✅
