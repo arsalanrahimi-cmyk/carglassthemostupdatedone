@@ -1,10 +1,10 @@
 {
   "summary": {
     "total_tests": 21,
-    "passed_tests": 20,
-    "failed_tests": 1,
-    "success_rate": 95.2,
-    "test_timestamp": "2026-02-02T07:00:25.365032"
+    "passed_tests": 21,
+    "failed_tests": 0,
+    "success_rate": 100.0,
+    "test_timestamp": "2026-02-02T07:01:02.881689"
   },
   "test_results": [
     {
@@ -12,147 +12,147 @@
       "endpoint": "",
       "success": true,
       "details": "",
-      "timestamp": "2026-02-02T07:00:24.660233"
+      "timestamp": "2026-02-02T07:01:02.290600"
     },
     {
       "test_name": "Business Registration",
       "endpoint": "auth/register/business",
       "success": true,
       "details": "",
-      "timestamp": "2026-02-02T07:00:24.702353"
+      "timestamp": "2026-02-02T07:01:02.334855"
     },
     {
       "test_name": "Business Login",
       "endpoint": "auth/login",
       "success": true,
       "details": "",
-      "timestamp": "2026-02-02T07:00:24.737832"
+      "timestamp": "2026-02-02T07:01:02.372953"
     },
     {
       "test_name": "Installer Registration",
       "endpoint": "auth/register/installer",
       "success": true,
       "details": "",
-      "timestamp": "2026-02-02T07:00:24.769778"
+      "timestamp": "2026-02-02T07:01:02.407641"
     },
     {
       "test_name": "Forgot Password Request",
       "endpoint": "auth/forgot-password",
       "success": true,
       "details": "",
-      "timestamp": "2026-02-02T07:00:24.846271"
+      "timestamp": "2026-02-02T07:01:02.442958"
     },
     {
       "test_name": "Public Search - Part Number",
       "endpoint": "search",
       "success": true,
       "details": "",
-      "timestamp": "2026-02-02T07:00:24.920279"
+      "timestamp": "2026-02-02T07:01:02.477647"
     },
     {
       "test_name": "Public Search Location Privacy",
       "endpoint": "search",
-      "success": false,
-      "details": "Location field found in public search results",
-      "timestamp": "2026-02-02T07:00:24.920865"
+      "success": true,
+      "details": "Location field properly hidden from public search",
+      "timestamp": "2026-02-02T07:01:02.478151"
     },
     {
       "test_name": "Public Search - Vehicle",
       "endpoint": "search",
       "success": true,
       "details": "",
-      "timestamp": "2026-02-02T07:00:24.955230"
+      "timestamp": "2026-02-02T07:01:02.509737"
     },
     {
       "test_name": "Contact Form Submission",
       "endpoint": "contact",
       "success": true,
       "details": "",
-      "timestamp": "2026-02-02T07:00:24.994495"
+      "timestamp": "2026-02-02T07:01:02.549420"
     },
     {
       "test_name": "Get Installers List",
       "endpoint": "installers",
       "success": true,
       "details": "",
-      "timestamp": "2026-02-02T07:00:25.024893"
+      "timestamp": "2026-02-02T07:01:02.581547"
     },
     {
       "test_name": "Get Vehicle Years",
       "endpoint": "vehicles/years",
       "success": true,
       "details": "",
-      "timestamp": "2026-02-02T07:00:25.061603"
+      "timestamp": "2026-02-02T07:01:02.612935"
     },
     {
       "test_name": "Get Vehicle Makes",
       "endpoint": "vehicles/makes",
       "success": true,
       "details": "",
-      "timestamp": "2026-02-02T07:00:25.093718"
+      "timestamp": "2026-02-02T07:01:02.645268"
     },
     {
       "test_name": "Get Toyota Models",
       "endpoint": "vehicles/models/Toyota",
       "success": true,
       "details": "",
-      "timestamp": "2026-02-02T07:00:25.126886"
+      "timestamp": "2026-02-02T07:01:02.677618"
     },
     {
       "test_name": "Get Categories",
       "endpoint": "vehicles/categories",
       "success": true,
       "details": "",
-      "timestamp": "2026-02-02T07:00:25.160207"
+      "timestamp": "2026-02-02T07:01:02.707270"
     },
     {
       "test_name": "CSV Template Download",
       "endpoint": "products/template",
       "success": true,
       "details": "",
-      "timestamp": "2026-02-02T07:00:25.188745"
+      "timestamp": "2026-02-02T07:01:02.742172"
     },
     {
       "test_name": "CSV Template Info",
       "endpoint": "products/template-info",
       "success": true,
       "details": "",
-      "timestamp": "2026-02-02T07:00:25.259288"
+      "timestamp": "2026-02-02T07:01:02.772011"
     },
     {
       "test_name": "CSV Template Location Column",
       "endpoint": "products/template-info",
       "success": true,
       "details": "Location field included in CSV template",
-      "timestamp": "2026-02-02T07:00:25.259784"
+      "timestamp": "2026-02-02T07:01:02.772460"
     },
     {
       "test_name": "Get Current User",
       "endpoint": "auth/me",
       "success": true,
       "details": "",
-      "timestamp": "2026-02-02T07:00:25.291910"
+      "timestamp": "2026-02-02T07:01:02.805869"
     },
     {
       "test_name": "Add Product with Required Fields",
       "endpoint": "products",
       "success": true,
       "details": "",
-      "timestamp": "2026-02-02T07:00:25.327275"
+      "timestamp": "2026-02-02T07:01:02.847858"
     },
     {
       "test_name": "Get Business Inventory",
       "endpoint": "products/my-inventory",
       "success": true,
       "details": "",
-      "timestamp": "2026-02-02T07:00:25.364500"
+      "timestamp": "2026-02-02T07:01:02.881058"
     },
     {
       "test_name": "Inventory Location Field",
       "endpoint": "products/my-inventory",
       "success": true,
       "details": "Location field present in business inventory",
-      "timestamp": "2026-02-02T07:00:25.365005"
+      "timestamp": "2026-02-02T07:01:02.881661"
     }
   ]
 }
