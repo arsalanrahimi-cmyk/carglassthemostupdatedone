@@ -712,6 +712,21 @@ async def delete_product(product_id: str, current_user: dict = Depends(get_curre
         raise HTTPException(status_code=404, detail="Product not found")
     return {"success": True, "message": "Product deleted"}
 
+@api_router.delete("/products", response_model=dict)
+async def delete_all_products(current_user: dict = Depends(get_current_user)):
+    """Delete all products for the current business"""
+    if current_user["user_type"] not in ["business", "admin"]:
+        raise HTTPException(status_code=403, detail="Only businesses can delete products")
+    
+    result = await db.products.delete_many({
+        "business_id": current_user.get("business_id")
+    })
+    return {
+        "success": True, 
+        "deleted_count": result.deleted_count,
+        "message": f"Deleted {result.deleted_count} products"
+    }
+
 # ==================== PUBLIC SEARCH ROUTES ====================
 
 @api_router.post("/search", response_model=dict)
