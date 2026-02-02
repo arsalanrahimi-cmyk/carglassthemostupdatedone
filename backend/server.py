@@ -89,9 +89,9 @@ class AdminRegister(BaseModel):
 
 # Product Models
 class ProductCreate(BaseModel):
-    nags_number: str  # Required - only required field
+    nags_number: str  # Required
+    oem_number: str   # Required - OEM Part Number
     part_number: Optional[str] = None
-    oem_number: Optional[str] = None
     interchange_number: Optional[str] = None
     category: Optional[str] = None
     year_start: Optional[int] = None
