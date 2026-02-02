@@ -385,24 +385,24 @@ class CarGlassHubAPITester:
         self.test_health_check()
         
         # Authentication tests
-        self.test_user_registration()
-        self.test_user_login()
-        self.test_seller_registration()
+        self.test_business_registration()
+        self.test_business_login()
         self.test_installer_registration()
         self.test_forgot_password()
         
-        # Authenticated endpoints
-        self.test_authenticated_endpoints()
-        
-        # Search functionality
-        self.test_part_search_by_number()
-        self.test_part_search_by_vehicle()
-        
-        # Public endpoints
+        # Public endpoints (no auth required)
+        self.test_public_search()
+        self.test_vehicle_search()
         self.test_contact_form()
         self.test_get_installers()
-        self.test_get_parts()
         self.test_vehicle_data_endpoints()
+        self.test_csv_template()
+        self.test_csv_template_info()
+        
+        # Authenticated endpoints (business features)
+        self.test_authenticated_endpoints()
+        self.test_add_product()
+        self.test_get_inventory()
         
         # Print summary
         print("\n" + "=" * 60)
@@ -424,10 +424,10 @@ class CarGlassHubAPITester:
             "test_results": self.test_results
         }
         
-        with open('/app/test_reports/backend_api_results.json', 'w') as f:
+        with open('/app/test_reports/backend_api_results_updated.json', 'w') as f:
             json.dump(results, f, indent=2)
         
-        print(f"\n📄 Detailed results saved to: /app/test_reports/backend_api_results.json")
+        print(f"\n📄 Detailed results saved to: /app/test_reports/backend_api_results_updated.json")
         
         return self.tests_passed == self.tests_run
 
