@@ -386,15 +386,29 @@ class CarGlassHubAPITester:
         message_id = None
         
         try:
-            # Test 1: Send message from business to business
-            self.token = self.business_token  # Use business token to send message
+            # First get the current user to get their business_id
+            self.token = self.business_token
+            success, user_response = self.run_test(
+                "Get Current Business User",
+                "GET",
+                "auth/me",
+                200
+            )
+            
+            if not success or 'business_id' not in user_response:
+                print("⚠️  Could not get business_id for messaging test")
+                return False
+                
+            business_id = user_response['business_id']
+            
+            # Test 1: Send message from business to business (use same business for testing)
             success, response = self.run_test(
                 "Send Message to Seller",
                 "POST",
                 "messages",
                 200,
                 data={
-                    "recipient_id": "test-business-id",  # This will be handled by backend
+                    "recipient_id": business_id,  # Use actual business ID
                     "subject": "Test Message Subject",
                     "message": "This is a test message from automated testing."
                 }
