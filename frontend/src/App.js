@@ -428,14 +428,51 @@ const Home = () => {
             <form onSubmit={handleSearch}>
               {searchType === "part" ? (
                 <div className="flex gap-4">
-                  <input
-                    type="text"
-                    value={partNumber}
-                    onChange={(e) => setPartNumber(e.target.value)}
-                    placeholder="Enter part number (NAGS, OEM, Interchange)"
-                    className="flex-1 h-12 px-4 bg-white text-slate-900 rounded-lg border-0 focus:ring-2 focus:ring-blue-500"
-                    data-testid="part-number-input"
-                  />
+                  <div className="flex-1 relative" ref={searchInputRef}>
+                    <input
+                      type="text"
+                      value={partNumber}
+                      onChange={(e) => setPartNumber(e.target.value)}
+                      onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                      placeholder="Start typing part number (FW, DW, BG...)"
+                      className="w-full h-12 px-4 bg-white text-slate-900 rounded-lg border-0 focus:ring-2 focus:ring-blue-500"
+                      data-testid="part-number-input"
+                      autoComplete="off"
+                    />
+                    {/* Autocomplete Dropdown */}
+                    {showSuggestions && suggestions.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-slate-200 z-50 max-h-80 overflow-y-auto">
+                        <div className="p-2 bg-slate-50 border-b border-slate-200">
+                          <p className="text-xs text-slate-500 font-medium">Select a part number:</p>
+                        </div>
+                        {suggestions.map((suggestion, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => handleSelectSuggestion(suggestion)}
+                            className="w-full px-4 py-3 text-left hover:bg-blue-50 flex items-center justify-between border-b border-slate-100 last:border-0 transition-colors"
+                          >
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-slate-900">{suggestion.label}</span>
+                                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">{suggestion.type}</span>
+                              </div>
+                              {suggestion.sublabel && (
+                                <p className="text-sm text-slate-500 mt-0.5">{suggestion.sublabel}</p>
+                              )}
+                            </div>
+                            <Search size={16} className="text-slate-400" />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {/* Loading indicator */}
+                    {loadingSuggestions && partNumber.length > 0 && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                      </div>
+                    )}
+                  </div>
                   <button
                     type="submit"
                     disabled={loading}
