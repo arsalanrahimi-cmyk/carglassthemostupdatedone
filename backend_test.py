@@ -106,45 +106,51 @@ class CarGlassHubAPITester:
         """Test API health check"""
         return self.run_test("Health Check", "GET", "", 200)
 
-    def test_user_registration(self):
-        """Test user registration"""
-        # First try to register a new user with timestamp to avoid conflicts
+    def test_business_registration(self):
+        """Test business registration"""
+        # Use timestamp to avoid conflicts
         timestamp = int(time.time())
-        test_email = f"testuser_{timestamp}@example.com"
+        test_email = f"testbiz_{timestamp}@example.com"
         
         success, response = self.run_test(
-            "User Registration",
+            "Business Registration",
             "POST", 
-            "auth/register",
+            "auth/register/business",
             200,
             data={
                 "email": test_email,
                 "password": "testpass123",
-                "name": "Test User Registration"
+                "business_name": "Test Auto Glass Shop",
+                "contact_name": "Test Business Owner",
+                "phone": "555-123-4567",
+                "city": "Phoenix",
+                "state": "AZ",
+                "zip_code": "85001"
             }
         )
         
         if success and 'token' in response:
-            print(f"   ✅ Registration successful, got token")
+            self.business_token = response['token']
+            print(f"   ✅ Business registration successful, got token")
             return True, response
         return False, {}
 
-    def test_user_login(self):
-        """Test user login with existing credentials"""
+    def test_business_login(self):
+        """Test business login with existing credentials"""
         success, response = self.run_test(
-            "User Login",
+            "Business Login",
             "POST",
             "auth/login", 
             200,
             data={
-                "email": self.test_user["email"],
-                "password": self.test_user["password"]
+                "email": self.existing_business["email"],
+                "password": self.existing_business["password"]
             }
         )
         
         if success and 'token' in response:
             self.token = response['token']
-            print(f"   ✅ Login successful, token stored")
+            print(f"   ✅ Business login successful, token stored")
             return True, response
         return False, {}
 
