@@ -154,29 +154,6 @@ class CarGlassHubAPITester:
             return True, response
         return False, {}
 
-    def test_seller_registration(self):
-        """Test seller registration"""
-        timestamp = int(time.time())
-        seller_email = f"seller_{timestamp}@example.com"
-        
-        success, response = self.run_test(
-            "Seller Registration",
-            "POST",
-            "sellers/register",
-            200,
-            data={
-                "email": seller_email,
-                "password": "testpass123",
-                "business_name": "Test Auto Glass Shop",
-                "contact_name": "Test Seller",
-                "phone": "555-123-4567",
-                "city": "Test City",
-                "state": "CA",
-                "zip_code": "90210"
-            }
-        )
-        return success, response
-
     def test_installer_registration(self):
         """Test installer registration"""
         timestamp = int(time.time())
@@ -185,18 +162,52 @@ class CarGlassHubAPITester:
         success, response = self.run_test(
             "Installer Registration", 
             "POST",
-            "installers/register",
+            "auth/register/installer",
             200,
             data={
                 "email": installer_email,
                 "password": "testpass123",
-                "business_name": "Test Glass Installation",
-                "contact_name": "Test Installer",
+                "name": "Test Installer",
                 "phone": "555-987-6543",
-                "city": "Test City",
-                "state": "CA", 
-                "zip_code": "90210",
-                "services": ["Windshield Replacement", "Mobile Service"]
+                "service_area": "Phoenix Metro Area",
+                "city": "Phoenix",
+                "state": "AZ", 
+                "zip_code": "85001"
+            }
+        )
+        return success, response
+
+    def test_public_search(self):
+        """Test public search functionality (no auth required)"""
+        success, response = self.run_test(
+            "Public Search - Part Number",
+            "POST",
+            "search",
+            200,
+            data={"part_number": "FW02537"}
+        )
+        
+        # Verify location field is NOT in public search results
+        if success and 'results' in response:
+            for product in response['results']:
+                if 'location' in product:
+                    self.log_test("Public Search Location Privacy", False, "Location field found in public search results", "search")
+                    return False, response
+            self.log_test("Public Search Location Privacy", True, "Location field properly hidden from public search", "search")
+        
+        return success, response
+
+    def test_vehicle_search(self):
+        """Test vehicle-based search"""
+        success, response = self.run_test(
+            "Public Search - Vehicle",
+            "POST", 
+            "search",
+            200,
+            data={
+                "year": 2020,
+                "make": "Toyota",
+                "model": "Camry"
             }
         )
         return success, response
