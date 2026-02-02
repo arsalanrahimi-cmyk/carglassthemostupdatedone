@@ -1146,6 +1146,18 @@ const Dashboard = () => {
     }
   };
 
+  const handleDeleteAllProducts = async () => {
+    if (!window.confirm("⚠️ Are you sure you want to DELETE ALL products in your inventory?\n\nThis action cannot be undone!")) return;
+    if (!window.confirm("This will permanently delete " + products.length + " products. Type 'yes' mentally and click OK to confirm.")) return;
+    try {
+      const res = await axios.delete(`${API}/products`, { headers: { Authorization: `Bearer ${token}` } });
+      setToast({ message: res.data.message || "All products deleted!", type: "success" });
+      fetchData();
+    } catch (error) {
+      setToast({ message: "Failed to delete products", type: "error" });
+    }
+  };
+
   const toggleVisibility = async (product) => {
     try {
       await axios.put(`${API}/products/${product.id}`, 
