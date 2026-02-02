@@ -1692,6 +1692,9 @@ const Dashboard = () => {
       {/* Add Product Modal */}
       {showAddModal && <AddProductModal onClose={() => setShowAddModal(false)} onSuccess={() => { setShowAddModal(false); fetchData(); }} token={token} setToast={setToast} />}
 
+      {/* Edit Product Modal */}
+      {editProduct && <EditProductModal product={editProduct} onClose={() => setEditProduct(null)} onSuccess={() => { setEditProduct(null); fetchData(); }} token={token} setToast={setToast} />}
+
       {/* Reply Modal */}
       {showReplyModal && <ReplyModal message={showReplyModal} onClose={() => setShowReplyModal(null)} token={token} setToast={setToast} onSuccess={() => { setShowReplyModal(null); fetchData(); }} />}
     </div>
