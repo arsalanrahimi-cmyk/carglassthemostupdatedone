@@ -349,16 +349,6 @@ class CarGlassHubAPITester:
         )
         return success, response
 
-    def test_get_parts(self):
-        """Test get parts endpoint (browse parts)"""
-        success, response = self.run_test(
-            "Browse Parts",
-            "GET", 
-            "parts",
-            200
-        )
-        return success, response
-
     def test_vehicle_data_endpoints(self):
         """Test vehicle data endpoints"""
         # Test years
@@ -370,8 +360,8 @@ class CarGlassHubAPITester:
         # Test models for Toyota
         success3, _ = self.run_test("Get Toyota Models", "GET", "vehicles/models/Toyota", 200)
         
-        # Test part types
-        success4, _ = self.run_test("Get Part Types", "GET", "vehicles/part-types", 200)
+        # Test categories
+        success4, _ = self.run_test("Get Categories", "GET", "vehicles/categories", 200)
         
         return all([success1, success2, success3, success4])
 
