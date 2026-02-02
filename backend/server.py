@@ -516,7 +516,7 @@ async def create_product(product: ProductCreate, current_user: dict = Depends(ge
 
 @api_router.post("/products/bulk", response_model=dict)
 async def bulk_upload_products(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
-    """Bulk upload products via CSV file"""
+    """Bulk upload products via CSV file - very flexible, all fields optional"""
     if current_user["user_type"] not in ["business", "admin"]:
         raise HTTPException(status_code=403, detail="Only businesses can upload products")
     
@@ -528,42 +528,89 @@ async def bulk_upload_products(file: UploadFile = File(...), current_user: dict 
     reader = csv.DictReader(io.StringIO(decoded))
     
     created_count = 0
+    skipped_count = 0
     errors = []
     
     for idx, row in enumerate(reader):
         try:
-            # Validate required fields
-            nags_number = row.get("nags_number", "").strip()
-            oem_number = row.get("oem_number", "").strip()
+            # Check if row has at least some data (any non-empty field)
+            has_data = any(str(v).strip() for v in row.values() if v)
+            if not has_data:
+                skipped_count += 1
+                continue
             
-            if not nags_number:
-                errors.append({"row": idx + 2, "error": "NAGS Number is required"})
-                continue
-            if not oem_number:
-                errors.append({"row": idx + 2, "error": "OEM Part Number is required"})
-                continue
+            # All fields are optional - just grab whatever is provided
+            nags_number = row.get("nags_number", "").strip() or row.get("NAGS", "").strip() or row.get("nags", "").strip()
+            oem_number = row.get("oem_number", "").strip() or row.get("OEM", "").strip() or row.get("oem", "").strip()
+            part_number = row.get("part_number", "").strip() or row.get("part", "").strip() or row.get("Part", "").strip()
+            
+            # Generate a reference if no part numbers provided
+            if not nags_number and not oem_number and not part_number:
+                part_number = f"PART-{idx+1}"
+            
+            # Parse year fields flexibly
+            year_start = None
+            year_end = None
+            year_val = row.get("year_start") or row.get("year") or row.get("Year") or ""
+            if year_val:
+                try:
+                    year_start = int(str(year_val).strip())
+                except:
+                    pass
+            year_end_val = row.get("year_end") or row.get("year_to") or ""
+            if year_end_val:
+                try:
+                    year_end = int(str(year_end_val).strip())
+                except:
+                    pass
+            # If only one year provided, use it for both
+            if year_start and not year_end:
+                year_end = year_start
+            if year_end and not year_start:
+                year_start = year_end
+            
+            # Parse price flexibly
+            price = None
+            price_val = row.get("price") or row.get("Price") or ""
+            if price_val:
+                try:
+                    # Remove $ and commas
+                    price_str = str(price_val).replace("$", "").replace(",", "").strip()
+                    if price_str:
+                        price = float(price_str)
+                except:
+                    pass
+            
+            # Parse quantity flexibly
+            quantity = 1
+            qty_val = row.get("quantity") or row.get("qty") or row.get("Qty") or row.get("Quantity") or ""
+            if qty_val:
+                try:
+                    quantity = int(str(qty_val).strip())
+                except:
+                    quantity = 1
             
             product_doc = {
                 "id": str(uuid.uuid4()),
                 "business_id": current_user.get("business_id"),
                 "user_id": current_user["id"],
-                "nags_number": nags_number,
-                "oem_number": oem_number,
-                "part_number": row.get("part_number", ""),
-                "interchange_number": row.get("interchange_number"),
-                "category": row.get("category") or None,
-                "year_start": int(row.get("year_start")) if row.get("year_start") else None,
-                "year_end": int(row.get("year_end")) if row.get("year_end") else None,
-                "make": row.get("make") or None,
-                "model": row.get("model") or None,
-                "glass_type": row.get("glass_type"),
-                "condition": row.get("condition") or None,
-                "price": float(row.get("price")) if row.get("price") else None,
-                "call_for_price": row.get("call_for_price", "").lower() == "true",
-                "quantity": int(row.get("quantity", 1)) if row.get("quantity") else 1,
-                "location": row.get("location"),
-                "description": row.get("description"),
-                "listing_type": row.get("listing_type", "public") or "public",
+                "nags_number": nags_number or None,
+                "oem_number": oem_number or None,
+                "part_number": part_number or None,
+                "interchange_number": (row.get("interchange_number") or row.get("interchange") or "").strip() or None,
+                "category": (row.get("category") or row.get("Category") or row.get("type") or "").strip() or None,
+                "year_start": year_start,
+                "year_end": year_end,
+                "make": (row.get("make") or row.get("Make") or "").strip() or None,
+                "model": (row.get("model") or row.get("Model") or "").strip() or None,
+                "glass_type": (row.get("glass_type") or "").strip() or None,
+                "condition": (row.get("condition") or row.get("Condition") or "").strip() or None,
+                "price": price,
+                "call_for_price": str(row.get("call_for_price", "")).lower() in ["true", "yes", "1", "call"],
+                "quantity": quantity,
+                "location": (row.get("location") or row.get("Location") or row.get("loc") or "").strip() or None,
+                "description": (row.get("description") or row.get("Description") or row.get("notes") or row.get("Notes") or "").strip() or None,
+                "listing_type": (row.get("listing_type") or row.get("visibility") or "public").strip().lower() or "public",
                 "images": [],
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "updated_at": datetime.now(timezone.utc).isoformat()
@@ -576,8 +623,11 @@ async def bulk_upload_products(file: UploadFile = File(...), current_user: dict 
     return {
         "success": True,
         "created_count": created_count,
+        "skipped_empty_rows": skipped_count,
         "error_count": len(errors),
-        "errors": errors[:10]  # Return first 10 errors
+        "errors": errors[:10],
+        "message": f"Successfully uploaded {created_count} products!"
+    }
     }
 
 @api_router.get("/products/template")
