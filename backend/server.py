@@ -561,13 +561,30 @@ async def bulk_upload_products(file: UploadFile = File(...), current_user: dict 
 
 @api_router.get("/products/template")
 async def get_csv_template():
-    """Get CSV template for bulk upload"""
+    """Download CSV template for bulk upload"""
+    from fastapi.responses import StreamingResponse
+    
+    # Create CSV content
+    csv_content = """nags_number,oem_number,part_number,category,year_start,year_end,make,model,condition,price,call_for_price,quantity,description,listing_type
+FW02537,43R-001025,INT-001,windshield,2020,2024,Toyota,Camry,New,150.00,false,5,Front windshield with rain sensor,public
+DW01456,43R-002030,,door_glass,2018,2022,Honda,Accord,Used,75.00,false,3,Driver side door glass,public
+BG03789,43R-003045,,back_glass,2019,2023,Ford,F-150,OEM,,true,2,Heated back glass,public"""
+    
+    # Return as downloadable CSV file
+    return StreamingResponse(
+        iter([csv_content]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=carglasshub_bulk_upload_template.csv"}
+    )
+
+@api_router.get("/products/template-info")
+async def get_csv_template_info():
+    """Get CSV template column information"""
     return {
-        "columns": [
-            "part_number", "nags_number", "oem_number", "interchange_number",
-            "category", "year_start", "year_end", "make", "model",
-            "glass_type", "condition", "price", "call_for_price",
-            "quantity", "location", "description", "listing_type"
+        "required_columns": ["nags_number", "oem_number"],
+        "optional_columns": [
+            "part_number", "category", "year_start", "year_end", "make", "model",
+            "condition", "price", "call_for_price", "quantity", "description", "listing_type"
         ],
         "categories": [
             "windshield", "door_glass", "quarter_glass", "vent_glass",
