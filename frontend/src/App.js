@@ -327,7 +327,7 @@ const Home = () => {
               Find <span className="text-blue-400">Auto Glass Parts</span> From Trusted Sellers
             </h1>
             <p className="text-slate-300 text-lg">
-              The nation's leading B2B marketplace for the auto glass industry. Search thousands of parts from verified businesses across the country.
+              The nation's leading B2B marketplace for the auto glass industry. Search thousands of parts from verified businesses across the country or add your unlimited inventory in our database for free.
             </p>
           </div>
 
