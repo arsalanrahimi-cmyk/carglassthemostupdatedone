@@ -681,7 +681,8 @@ async def search_products(search: ProductSearch):
         ]}
         query = {"$and": [query, text_query]} if query != {"listing_type": "public"} else {**query, **text_query}
     
-    products = await db.products.find(query, {"_id": 0}).limit(100).to_list(100)
+    # Exclude location field from public search results
+    products = await db.products.find(query, {"_id": 0, "location": 0}).limit(100).to_list(100)
     
     # Get business info for each product
     for product in products:
