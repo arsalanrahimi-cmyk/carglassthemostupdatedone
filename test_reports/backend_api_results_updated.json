@@ -1,0 +1,151 @@
+{
+  "summary": {
+    "total_tests": 20,
+    "passed_tests": 20,
+    "failed_tests": 0,
+    "success_rate": 100.0,
+    "test_timestamp": "2026-02-02T06:12:12.695405"
+  },
+  "test_results": [
+    {
+      "test_name": "Health Check",
+      "endpoint": "",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-02T06:12:11.944295"
+    },
+    {
+      "test_name": "Business Registration",
+      "endpoint": "auth/register/business",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-02T06:12:12.006015"
+    },
+    {
+      "test_name": "Installer Registration",
+      "endpoint": "auth/register/installer",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-02T06:12:12.049606"
+    },
+    {
+      "test_name": "Business Login",
+      "endpoint": "auth/login",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-02T06:12:12.084452"
+    },
+    {
+      "test_name": "Forgot Password Request",
+      "endpoint": "auth/forgot-password",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-02T06:12:12.124489"
+    },
+    {
+      "test_name": "Password Reset",
+      "endpoint": "auth/reset-password",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-02T06:12:12.160144"
+    },
+    {
+      "test_name": "Search by Part Number",
+      "endpoint": "search",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-02T06:12:12.195301"
+    },
+    {
+      "test_name": "Search by Vehicle",
+      "endpoint": "search",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-02T06:12:12.233319"
+    },
+    {
+      "test_name": "Contact Form Submission",
+      "endpoint": "contact",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-02T06:12:12.277452"
+    },
+    {
+      "test_name": "Get Installers List",
+      "endpoint": "installers",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-02T06:12:12.311271"
+    },
+    {
+      "test_name": "Get Vehicle Years",
+      "endpoint": "vehicles/years",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-02T06:12:12.341806"
+    },
+    {
+      "test_name": "Get Vehicle Makes",
+      "endpoint": "vehicles/makes",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-02T06:12:12.379830"
+    },
+    {
+      "test_name": "Get Toyota Models",
+      "endpoint": "vehicles/models/Toyota",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-02T06:12:12.412745"
+    },
+    {
+      "test_name": "Get Categories",
+      "endpoint": "vehicles/categories",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-02T06:12:12.442017"
+    },
+    {
+      "test_name": "Get CSV Template",
+      "endpoint": "products/template",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-02T06:12:12.473446"
+    },
+    {
+      "test_name": "Get Current User",
+      "endpoint": "auth/me",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-02T06:12:12.547726"
+    },
+    {
+      "test_name": "Add Product",
+      "endpoint": "products",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-02T06:12:12.591886"
+    },
+    {
+      "test_name": "Get My Inventory",
+      "endpoint": "products/my-inventory",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-02T06:12:12.623329"
+    },
+    {
+      "test_name": "Toggle Product Visibility",
+      "endpoint": "products/be83d86b-6dbb-40e0-a01d-b72c3c5be440",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-02T06:12:12.660596"
+    },
+    {
+      "test_name": "Delete Product",
+      "endpoint": "products/be83d86b-6dbb-40e0-a01d-b72c3c5be440",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-02T06:12:12.694939"
+    }
+  ]
+}
