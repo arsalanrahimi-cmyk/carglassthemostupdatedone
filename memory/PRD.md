@@ -1,99 +1,138 @@
-# CarGlassHub - Auto Glass Marketplace PRD
+# CarGlassHub - Auto Glass Marketplace & Inventory Management Platform
 
 ## Original Problem Statement
-User's CarGlassHub deployment had login and registration not working after deployment. The deployed codebase was missing the actual application code (only had starter template).
+Rebuild CarGlassHub as a B2B marketplace platform similar to eBay but exclusively for the auto glass industry. Platform connects businesses to list products, manage inventory, and find installers. Platform is NOT responsible for financial transactions between users.
 
-## Solution Applied (Jan 27, 2026)
-- Pulled actual code from GitHub repo: arsalanrahimi-cmyk/carglassthemostupdatedone
-- Deployed complete backend (FastAPI with MongoDB) and frontend (React + Tailwind)
-- Installed missing dependencies (resend for email)
-- Verified all authentication flows working
+## Solution Delivered (Feb 2, 2026)
+Complete rebuild of the platform with all requested features:
+- Public search for visitors
+- Business and installer registration
+- Inventory management (public/private)
+- Bulk CSV upload
+- Admin panel
+- Legal pages with financial disclaimer
 
 ## User Personas
-1. **Car Owners** - Search for auto glass parts by part number or vehicle
-2. **Auto Glass Sellers** - List and sell auto glass inventory
-3. **Installers** - Register as service providers for installation, showcase work portfolio
+1. **Auto Glass Businesses** - List and manage inventory, buy/sell parts
+2. **Mobile Installers** - Register for job opportunities
+3. **Admin** - Manage users, products, and content
 
-## Core Requirements (Static)
-- Part search by part number (NAGS, OEM, Interchange)
-- Vehicle search by Year/Make/Model/Part Type
-- User authentication (login/register)
-- Seller registration and management
-- Installer registration and directory
-- Contact form functionality
-- Browse parts listing
+## Core Requirements (Implemented)
 
-## What's Been Implemented
+### 1. User Registration & Login ✅
+- Business registration with full details
+- Installer registration with service area
+- Admin registration (via secret code)
+- Secure JWT authentication
+- Password recovery
 
-### Backend (FastAPI + MongoDB)
-- `/api/auth/register` - User registration
-- `/api/auth/login` - User login with JWT (blocks deactivated accounts)
-- `/api/auth/me` - Get current user
-- `/api/auth/forgot-password` - Request password reset code
-- `/api/auth/reset-password` - Reset password with code
-- `/api/auth/change-password` - Change password (authenticated)
-- `/api/auth/deactivate` - Deactivate account (authenticated)
-- `/api/sellers/register` - Seller registration
-- `/api/sellers` - List sellers
-- `/api/installers/register` - Installer registration (with work_images support)
-- `/api/installers` - Search installers by city/state
-- `/api/contact` - Contact form submission
-- `/api/parts` - Parts listing
-- `/api/parts/search/number` - Search by part number
-- `/api/parts/search/vehicle` - Search by vehicle
-- `/api/vehicles/years` - Get available years
-- `/api/vehicles/makes` - Get car makes
-- `/api/vehicles/models/{make}` - Get models for make
-- `/api/vehicles/part-types` - Get part types
+### 2. User Dashboard ✅
+- View/edit profile
+- Manage inventory
+- List products (public/private)
+- Bulk CSV upload
 
-### Frontend (React + Tailwind)
-- Homepage with dual search (part number + vehicle)
-- Login/Register page with "Forgot Password?" link
-- Forgot Password page (2-step: email → code + new password)
-- Account Settings page (change password, deactivate account)
-- Seller registration page (/sell)
-- Seller Dashboard with inventory management
-- Installer registration page (/installer-register) with work portfolio upload (up to 5 images)
-- Contact Us page (/contact)
-- Browse Parts page (/browse)
-- Find Installers page (/installers) - displays work portfolio images
-- Footer with navigation
-- Mobile responsive design
+### 3. Product Categories ✅
+- Windshields
+- Door Glass
+- Quarter Glass
+- Vent Glass
+- Roof Glass
+- Back Glass
+- Window Regulators
+- Side Mirrors
+
+### 4. Inventory Management ✅
+- Public listings (searchable)
+- Private listings (internal only)
+- Quantity tracking
+- Edit/delete products
+
+### 5. Public Search ✅
+- Available to ALL visitors
+- Search by part number (NAGS, OEM, Interchange)
+- Search by vehicle (Year/Make/Model)
+- Search by category
+
+### 6. Bulk Upload ✅
+- CSV file upload
+- Downloadable template
+- Error handling
+
+### 7. Mobile Installer Registration ✅
+- Name, phone, service area
+- City/State/ZIP
+- Experience, availability, certifications
+
+### 8. Admin Panel ✅
+- View all users
+- Enable/disable accounts
+- View all products
+- Platform analytics
+
+### 9. Static Pages ✅
+- Disclaimer (financial responsibility notice)
+- Terms & Conditions
+- Privacy Policy
+- Contact Us
 
 ## Tech Stack
 - Frontend: React 19, Tailwind CSS, React Router
-- Backend: FastAPI, Motor (MongoDB async driver)
+- Backend: FastAPI, Motor (MongoDB async)
 - Database: MongoDB
 - Authentication: JWT tokens
-- Email: Resend (optional, demo mode available without API key)
 
-## Test Results (Jan 27, 2026)
-- Backend: 93.8% (15/16 tests passed)
-- Frontend: 100% (11/11 major flows tested)
-- Overall: 96.3% success rate
+## Test Results (Feb 2, 2026)
+- Backend: 100% (20/20 tests passed)
+- Frontend: 95% (22/23 tests passed)
+- Overall: 97.7% success rate
 
-## Prioritized Backlog
+## API Endpoints
 
-### P0 (Critical)
-- All core features implemented ✅
+### Authentication
+- POST `/api/auth/register` - User registration
+- POST `/api/auth/register/business` - Business registration
+- POST `/api/auth/register/installer` - Installer registration
+- POST `/api/auth/register/admin` - Admin registration (requires code)
+- POST `/api/auth/login` - Login
+- GET `/api/auth/me` - Get current user
+- POST `/api/auth/forgot-password` - Request reset code
+- POST `/api/auth/reset-password` - Reset password
+- POST `/api/auth/change-password` - Change password
 
-### P1 (High Priority)
-- Configure Resend API key for production email sending
-- Refactor App.js into smaller components
+### Products
+- GET `/api/products/template` - CSV template
+- POST `/api/products` - Create product
+- POST `/api/products/bulk` - Bulk upload
+- GET `/api/products/my-inventory` - Get user's inventory
+- PUT `/api/products/{id}` - Update product
+- DELETE `/api/products/{id}` - Delete product
 
-### P2 (Medium Priority)
-- Email notifications for contact form
-- Advanced search filters
-- Saved searches for users
-- Price comparison feature
+### Search (Public)
+- POST `/api/search` - Search products
 
-### P3 (Future)
-- Mobile app
-- Real-time chat between buyers/sellers
-- Integration with shipping providers
-- Analytics dashboard for sellers
+### Installers
+- GET `/api/installers` - List installers
+- GET `/api/installers/{id}` - Get installer
 
-## Notes
-- Forgot Password works in DEMO MODE when Resend API key is not configured - shows code in response
-- Account deactivation marks users as inactive and prevents login
-- Installer work images are stored as base64 encoded strings (max 5 per installer)
+### Businesses
+- GET `/api/businesses` - List businesses
+- GET `/api/businesses/{id}` - Get business
+
+### Admin
+- GET `/api/admin/users` - All users
+- PUT `/api/admin/users/{id}/status` - Toggle user status
+- GET `/api/admin/products` - All products
+- DELETE `/api/admin/products/{id}` - Delete product
+- GET `/api/admin/contacts` - All contacts
+- GET `/api/admin/stats` - Platform statistics
+
+## Important Disclaimer
+**CarGlassHub is a platform for connecting auto glass businesses. We are NOT responsible for any financial transactions between users. All transactions are conducted directly between businesses.**
+
+## Next Steps / Backlog
+- P1: Configure production email service
+- P2: Add messaging between buyers/sellers
+- P2: Payment integration (optional)
+- P3: Job dispatch system for installers
+- P3: Ratings and reviews
