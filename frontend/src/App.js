@@ -1529,9 +1529,14 @@ const Dashboard = () => {
                           </button>
                         </td>
                         <td className="px-4 py-3">
-                          <button onClick={() => handleDeleteProduct(product.id)} className="text-red-600 hover:text-red-700">
-                            <Trash2 size={18} />
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => setEditProduct(product)} className="text-blue-600 hover:text-blue-700" title="Edit">
+                              <Edit size={18} />
+                            </button>
+                            <button onClick={() => handleDeleteProduct(product.id)} className="text-red-600 hover:text-red-700" title="Delete">
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
