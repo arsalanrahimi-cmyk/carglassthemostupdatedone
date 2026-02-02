@@ -481,10 +481,27 @@ const Home = () => {
                           <MapPin size={16} />
                           <span>{product.seller.city}, {product.seller.state}</span>
                         </div>
-                        <a href={`tel:${product.seller.phone}`} className="flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium">
-                          <Phone size={16} />
-                          {product.seller.phone}
-                        </a>
+                        <div className="flex items-center gap-3">
+                          <a href={`tel:${product.seller.phone}`} className="flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium">
+                            <Phone size={16} />
+                            {product.seller.phone}
+                          </a>
+                          {user ? (
+                            <button 
+                              onClick={() => setShowContactModal(product)}
+                              className="flex items-center gap-1 bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700"
+                              data-testid="contact-seller-btn"
+                            >
+                              <Mail size={14} />
+                              Message
+                            </button>
+                          ) : (
+                            <Link to="/login" className="flex items-center gap-1 bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-200">
+                              <Mail size={14} />
+                              Login to Message
+                            </Link>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
