@@ -89,24 +89,24 @@ class AdminRegister(BaseModel):
 
 # Product Models
 class ProductCreate(BaseModel):
-    part_number: str
-    nags_number: Optional[str] = None
+    nags_number: str  # Required - only required field
+    part_number: Optional[str] = None
     oem_number: Optional[str] = None
     interchange_number: Optional[str] = None
-    category: str  # windshield, door_glass, quarter_glass, etc.
-    year_start: int
-    year_end: int
-    make: str
-    model: str
+    category: Optional[str] = None
+    year_start: Optional[int] = None
+    year_end: Optional[int] = None
+    make: Optional[str] = None
+    model: Optional[str] = None
     glass_type: Optional[str] = None
-    condition: str = "New"  # New, Used, OEM, Aftermarket
+    condition: Optional[str] = None
     price: Optional[float] = None
     call_for_price: bool = False
     quantity: int = 1
     location: Optional[str] = None
     description: Optional[str] = None
     listing_type: str = "public"  # public or private
-    images: List[str] = []
+    images: List[str] = []  # Up to 3 images as base64
 
 class ProductUpdate(BaseModel):
     part_number: Optional[str] = None
