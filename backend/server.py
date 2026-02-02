@@ -485,6 +485,10 @@ async def create_product(product: ProductCreate, current_user: dict = Depends(ge
     if not product.nags_number or not product.nags_number.strip():
         raise HTTPException(status_code=400, detail="NAGS Number is required")
     
+    # Validate OEM Part Number is provided
+    if not product.oem_number or not product.oem_number.strip():
+        raise HTTPException(status_code=400, detail="OEM Part Number is required")
+    
     # Limit images to 3
     images = product.images[:3] if product.images else []
     
