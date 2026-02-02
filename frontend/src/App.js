@@ -258,6 +258,7 @@ const Footer = () => (
 
 // Home Page - Public Search
 const Home = () => {
+  const { user, token } = useAuth();
   const [searchType, setSearchType] = useState("part");
   const [partNumber, setPartNumber] = useState("");
   const [year, setYear] = useState("");
@@ -271,6 +272,8 @@ const Home = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(null);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
