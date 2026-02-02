@@ -1121,7 +1121,7 @@ const Dashboard = () => {
 // Add Product Modal
 const AddProductModal = ({ onClose, onSuccess, token, setToast }) => {
   const [formData, setFormData] = useState({
-    part_number: "", nags_number: "", category: "",
+    part_number: "", nags_number: "", oem_number: "", category: "",
     year_start: "", year_end: "", make: "", model: "",
     condition: "", price: "", call_for_price: false, quantity: 1,
     listing_type: "public", description: "", images: []
@@ -1191,6 +1191,11 @@ const AddProductModal = ({ onClose, onSuccess, token, setToast }) => {
       return;
     }
     
+    if (!formData.oem_number.trim()) {
+      setToast({ message: "OEM Part Number is required", type: "error" });
+      return;
+    }
+    
     setLoading(true);
     try {
       const submitData = {
@@ -1218,18 +1223,40 @@ const AddProductModal = ({ onClose, onSuccess, token, setToast }) => {
           <button onClick={onClose} className="text-white hover:text-blue-200"><X size={24} /></button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* NAGS Number - Required */}
+          {/* Disclaimer */}
+          <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+            <p className="text-xs text-yellow-800">
+              <strong>Disclaimer:</strong> CarGlassHub is not responsible for the quality of parts listed. We only connect businesses to help find the right parts. All financial transactions and quality verification are the responsibility of the parties involved.
+            </p>
+          </div>
+
+          {/* Required Fields - NAGS Number & OEM Part Number */}
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <label className="block text-sm font-semibold text-blue-900 mb-2">NAGS Number *</label>
-            <input 
-              type="text" 
-              value={formData.nags_number} 
-              onChange={(e) => setFormData({...formData, nags_number: e.target.value})}
-              placeholder="e.g., FW02537, DW01456"
-              className="w-full h-12 px-4 border-2 border-blue-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-lg"
-              data-testid="nags-number-input"
-            />
-            <p className="text-xs text-blue-600 mt-1">This is the only required field</p>
+            <p className="text-sm font-semibold text-blue-900 mb-3">Required Information</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-blue-900 mb-1">NAGS Number *</label>
+                <input 
+                  type="text" 
+                  value={formData.nags_number} 
+                  onChange={(e) => setFormData({...formData, nags_number: e.target.value})}
+                  placeholder="e.g., FW02537"
+                  className="w-full h-11 px-4 border-2 border-blue-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  data-testid="nags-number-input"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-blue-900 mb-1">OEM Part Number *</label>
+                <input 
+                  type="text" 
+                  value={formData.oem_number} 
+                  onChange={(e) => setFormData({...formData, oem_number: e.target.value})}
+                  placeholder="e.g., 43R-001025"
+                  className="w-full h-11 px-4 border-2 border-blue-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  data-testid="oem-number-input"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Optional Fields Section */}
@@ -1238,7 +1265,7 @@ const AddProductModal = ({ onClose, onSuccess, token, setToast }) => {
             
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Part Number</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Your Part Number</label>
                 <input 
                   type="text" 
                   value={formData.part_number} 
@@ -1410,7 +1437,7 @@ const AddProductModal = ({ onClose, onSuccess, token, setToast }) => {
                   onChange={() => setFormData({...formData, listing_type: "public"})}
                   className="w-4 h-4 text-blue-600"
                 />
-                <span className="text-sm text-slate-700">🌐 Public (Searchable)</span>
+                <span className="text-sm text-slate-700">Public (Searchable)</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input 
@@ -1419,7 +1446,7 @@ const AddProductModal = ({ onClose, onSuccess, token, setToast }) => {
                   onChange={() => setFormData({...formData, listing_type: "private"})}
                   className="w-4 h-4 text-blue-600"
                 />
-                <span className="text-sm text-slate-700">🔒 Private (Internal)</span>
+                <span className="text-sm text-slate-700">Private (Internal)</span>
               </label>
             </div>
           </div>
