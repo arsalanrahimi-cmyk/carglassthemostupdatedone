@@ -214,19 +214,9 @@ class CarGlassHubAPITester:
 
     def test_forgot_password(self):
         """Test forgot password flow"""
-        success, response = self.run_test(
-            "Forgot Password Request",
-            "POST",
-            "auth/forgot-password",
-            200,
-            data=None,
-            headers={'Content-Type': 'application/x-www-form-urlencoded'}
-        )
-        
-        # Note: This endpoint expects form data, let's try with requests params
         try:
             url = f"{self.api_url}/auth/forgot-password"
-            response = requests.post(url, params={"email": self.test_user["email"]}, timeout=30)
+            response = requests.post(url, params={"email": "test@example.com"}, timeout=30)
             
             success = response.status_code == 200
             details = ""
@@ -250,31 +240,87 @@ class CarGlassHubAPITester:
             self.log_test("Forgot Password Request", False, str(e), "auth/forgot-password")
             return False, {}
 
-    def test_part_search_by_number(self):
-        """Test part search by part number"""
+    def test_add_product(self):
+        """Test adding a product (requires business auth)"""
+        if not self.token:
+            print("⚠️  Skipping add product test - no business token available")
+            return False, {}
+            
         success, response = self.run_test(
-            "Part Search by Number",
+            "Add Product with Required Fields",
             "POST",
-            "parts/search/number",
+            "products",
             200,
-            data={"part_number": "FW02537"}
+            data={
+                "nags_number": "FW02537",
+                "oem_number": "43R-001025", 
+                "part_number": "TEST-001",
+                "category": "windshield",
+                "year_start": 2020,
+                "year_end": 2024,
+                "make": "Toyota",
+                "model": "Camry",
+                "condition": "New",
+                "price": 150.00,
+                "quantity": 5,
+                "location": "Warehouse A - Shelf B3",
+                "description": "Test windshield part",
+                "listing_type": "public"
+            }
         )
         return success, response
 
-    def test_part_search_by_vehicle(self):
-        """Test part search by vehicle"""
+    def test_get_inventory(self):
+        """Test getting business inventory (requires business auth)"""
+        if not self.token:
+            print("⚠️  Skipping inventory test - no business token available")
+            return False, {}
+            
         success, response = self.run_test(
-            "Part Search by Vehicle",
-            "POST", 
-            "parts/search/vehicle",
-            200,
-            data={
-                "year": 2020,
-                "make": "Toyota",
-                "model": "Camry",
-                "part_type": "Windshield"
-            }
+            "Get Business Inventory",
+            "GET",
+            "products/my-inventory",
+            200
         )
+        
+        # Verify location field IS present in private inventory
+        if success and isinstance(response, list):
+            for product in response:
+                if 'location' not in product:
+                    self.log_test("Inventory Location Field", False, "Location field missing from business inventory", "products/my-inventory")
+                    return False, response
+            if response:  # Only log success if there are products
+                self.log_test("Inventory Location Field", True, "Location field present in business inventory", "products/my-inventory")
+        
+        return success, response
+
+    def test_csv_template(self):
+        """Test CSV template download"""
+        success, response = self.run_test(
+            "CSV Template Download",
+            "GET",
+            "products/template",
+            200
+        )
+        return success, response
+
+    def test_csv_template_info(self):
+        """Test CSV template info"""
+        success, response = self.run_test(
+            "CSV Template Info",
+            "GET",
+            "products/template-info",
+            200
+        )
+        
+        # Verify location is mentioned in template info
+        if success and 'optional_columns' in response:
+            if 'location' not in response['optional_columns']:
+                self.log_test("CSV Template Location Column", False, "Location not in CSV template columns", "products/template-info")
+                return False, response
+            else:
+                self.log_test("CSV Template Location Column", True, "Location field included in CSV template", "products/template-info")
+        
         return success, response
 
     def test_contact_form(self):
