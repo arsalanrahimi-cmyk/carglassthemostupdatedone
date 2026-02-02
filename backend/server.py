@@ -756,6 +756,17 @@ async def autocomplete_search(q: str = ""):
     seen = set()
     
     for p in products:
+        # Build sublabel
+        vehicle_info = ""
+        if p.get("make") and p.get("model"):
+            vehicle_info = f"{p['make']} {p['model']}"
+        elif p.get("make"):
+            vehicle_info = p["make"]
+        elif p.get("model"):
+            vehicle_info = p["model"]
+        elif p.get("category"):
+            vehicle_info = p["category"].replace("_", " ").title()
+        
         # Add NAGS number suggestion
         if p.get("nags_number") and p["nags_number"].upper().startswith(q.upper()):
             key = p["nags_number"]
@@ -764,7 +775,7 @@ async def autocomplete_search(q: str = ""):
                 suggestions.append({
                     "value": p["nags_number"],
                     "label": f"{p['nags_number']}",
-                    "sublabel": f"{p.get('make', '')} {p.get('model', '')}".strip() or p.get('category', ''),
+                    "sublabel": vehicle_info,
                     "type": "NAGS"
                 })
         
@@ -776,7 +787,7 @@ async def autocomplete_search(q: str = ""):
                 suggestions.append({
                     "value": p["oem_number"],
                     "label": f"{p['oem_number']}",
-                    "sublabel": f"{p.get('make', '')} {p.get('model', '')}".strip() or p.get('category', ''),
+                    "sublabel": vehicle_info,
                     "type": "OEM"
                 })
         
@@ -788,7 +799,7 @@ async def autocomplete_search(q: str = ""):
                 suggestions.append({
                     "value": p["part_number"],
                     "label": f"{p['part_number']}",
-                    "sublabel": f"{p.get('make', '')} {p.get('model', '')}".strip() or p.get('category', ''),
+                    "sublabel": vehicle_info,
                     "type": "Part#"
                 })
     
