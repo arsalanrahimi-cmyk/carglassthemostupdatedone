@@ -522,27 +522,38 @@ async def bulk_upload_products(file: UploadFile = File(...), current_user: dict 
     
     for idx, row in enumerate(reader):
         try:
+            # Validate required fields
+            nags_number = row.get("nags_number", "").strip()
+            oem_number = row.get("oem_number", "").strip()
+            
+            if not nags_number:
+                errors.append({"row": idx + 2, "error": "NAGS Number is required"})
+                continue
+            if not oem_number:
+                errors.append({"row": idx + 2, "error": "OEM Part Number is required"})
+                continue
+            
             product_doc = {
                 "id": str(uuid.uuid4()),
                 "business_id": current_user.get("business_id"),
                 "user_id": current_user["id"],
+                "nags_number": nags_number,
+                "oem_number": oem_number,
                 "part_number": row.get("part_number", ""),
-                "nags_number": row.get("nags_number"),
-                "oem_number": row.get("oem_number"),
                 "interchange_number": row.get("interchange_number"),
-                "category": row.get("category", "windshield"),
-                "year_start": int(row.get("year_start", 2020)),
-                "year_end": int(row.get("year_end", 2024)),
-                "make": row.get("make", ""),
-                "model": row.get("model", ""),
+                "category": row.get("category") or None,
+                "year_start": int(row.get("year_start")) if row.get("year_start") else None,
+                "year_end": int(row.get("year_end")) if row.get("year_end") else None,
+                "make": row.get("make") or None,
+                "model": row.get("model") or None,
                 "glass_type": row.get("glass_type"),
-                "condition": row.get("condition", "New"),
-                "price": float(row.get("price", 0)) if row.get("price") else None,
+                "condition": row.get("condition") or None,
+                "price": float(row.get("price")) if row.get("price") else None,
                 "call_for_price": row.get("call_for_price", "").lower() == "true",
-                "quantity": int(row.get("quantity", 1)),
+                "quantity": int(row.get("quantity", 1)) if row.get("quantity") else 1,
                 "location": row.get("location"),
                 "description": row.get("description"),
-                "listing_type": row.get("listing_type", "public"),
+                "listing_type": row.get("listing_type", "public") or "public",
                 "images": [],
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "updated_at": datetime.now(timezone.utc).isoformat()
