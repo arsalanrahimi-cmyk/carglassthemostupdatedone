@@ -701,7 +701,8 @@ async def search_products(search: ProductSearch):
 @api_router.get("/products/{product_id}", response_model=dict)
 async def get_product(product_id: str):
     """Get single product details"""
-    product = await db.products.find_one({"id": product_id, "listing_type": "public"}, {"_id": 0})
+    # Exclude location field from public product details
+    product = await db.products.find_one({"id": product_id, "listing_type": "public"}, {"_id": 0, "location": 0})
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     
