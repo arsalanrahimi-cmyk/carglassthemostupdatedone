@@ -2196,6 +2196,71 @@ const Disclaimer = () => (
   </div>
 );
 
+// Admin Registration
+const AdminRegister = () => {
+  const [formData, setFormData] = useState({ email: "", password: "", name: "", admin_code: "" });
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState(null);
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await axios.post(`${API}/auth/register/admin`, formData);
+      login(res.data.token, res.data.user);
+      setToast({ message: "Admin account created!", type: "success" });
+      setTimeout(() => navigate("/dashboard"), 1500);
+    } catch (error) {
+      setToast({ message: error.response?.data?.detail || "Registration failed. Check your admin code.", type: "error" });
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="py-12 px-4">
+      {toast && <Toast {...toast} onClose={() => setToast(null)} />}
+      <div className="max-w-md mx-auto">
+        <div className="text-center mb-8">
+          <Shield className="h-12 w-12 text-purple-600 mx-auto mb-4" />
+          <h1 className="text-3xl font-bold text-slate-900">Admin Registration</h1>
+          <p className="text-slate-600 mt-2">Create an admin account to manage the platform</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="bg-white p-8 rounded-xl border border-slate-200 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Full Name *</label>
+            <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
+              className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-lg" data-testid="admin-name-input" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Email *</label>
+            <input type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})}
+              className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-lg" data-testid="admin-email-input" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Password *</label>
+            <input type="password" required minLength={6} value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})}
+              className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-lg" data-testid="admin-password-input" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Admin Code *</label>
+            <input type="text" required value={formData.admin_code} onChange={(e) => setFormData({...formData, admin_code: e.target.value})}
+              placeholder="Enter admin registration code"
+              className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-lg font-mono" data-testid="admin-code-input" />
+            <p className="text-xs text-slate-500 mt-1">Contact the platform owner for the admin code</p>
+          </div>
+          <button type="submit" disabled={loading}
+            className="w-full bg-purple-600 text-white h-12 rounded-lg font-medium hover:bg-purple-700 disabled:opacity-50" data-testid="admin-submit-btn">
+            {loading ? "Creating Admin Account..." : "Create Admin Account"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // Main App
 function App() {
   return (
