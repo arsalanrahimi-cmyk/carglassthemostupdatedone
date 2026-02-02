@@ -242,7 +242,14 @@ const Footer = () => (
           </div>
         </div>
       </div>
-      <div className="border-t border-slate-800 mt-8 pt-8 text-center text-slate-400 text-sm">
+      {/* Disclaimer */}
+      <div className="border-t border-slate-800 mt-8 pt-6">
+        <p className="text-yellow-500 text-xs text-center mb-2 font-medium">DISCLAIMER</p>
+        <p className="text-slate-400 text-xs text-center max-w-3xl mx-auto">
+          CarGlassHub is a platform that connects businesses to help find the right auto glass parts. We are NOT responsible for the quality of parts listed, and we hold NO financial responsibility for transactions between parties. All transactions are conducted directly between businesses at their own risk.
+        </p>
+      </div>
+      <div className="border-t border-slate-800 mt-6 pt-6 text-center text-slate-500 text-sm">
         © {new Date().getFullYear()} CarGlassHub. All rights reserved. Platform for connecting businesses only.
       </div>
     </div>
